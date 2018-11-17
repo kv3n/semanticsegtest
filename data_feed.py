@@ -4,22 +4,20 @@ import tensorflow as tf
 import cv2
 import os
 
-tf.enable_eager_execution()
-
 EPOCHS = 50
-TRAIN_SIZE = 199
-VAL_SIZE = 45
-TEST_SIZE = 45
-BATCH_SIZE = 64
+TRAIN_SIZE = 10#199
+VAL_SIZE = 2#45
+TEST_SIZE = 2#45
+BATCH_SIZE = 1
 VALIDATIONS_PER_EPOCH = 2
 NUM_BATCHES_PER_EPOCH = TRAIN_SIZE // BATCH_SIZE
 VALIDATION_INTERVAL = NUM_BATCHES_PER_EPOCH // VALIDATIONS_PER_EPOCH
-TESTS_PER_EPOCH = 0.1
+TESTS_PER_EPOCH = 1.0 / EPOCHS
 TEST_INTERVAL = int(NUM_BATCHES_PER_EPOCH // TESTS_PER_EPOCH)
 
 
 class Data:
-    def __init__(self):
+    def __init__(self, datatype_placeholder):
         def unpickle(file):
             with open('data/label/' + file + '.label', 'rb') as fo:
                 label = pickle.load(fo, encoding='bytes')
@@ -33,58 +31,62 @@ class Data:
             filenames = os.listdir('data/image/' + dir_name)
             images = []
             labels = []
+            final_names = []
             for filename in filenames:
                 if not filename == '.DS_Store':
                     stripped_name = filename.rstrip('.png')
+                    final_names.append(stripped_name)
                     split = stripped_name.split('_')
                     label_name = split[0] + '_road_' + split[1]
                     images.append(loadimg(dir_name + stripped_name))
                     labels.append(unpickle(dir_name + label_name))
 
-            return images, labels
+            return images, labels, final_names
 
-        train_data, train_labels = load_files_from_dir('train/')
-        test_data, test_labels = load_files_from_dir('test/')
+        self.data_type = datatype_placeholder
 
-        print('loaded data')
+        self.global_step = 0
+        self.validation_step = 0
+        self.test_step = 0
 
+        train_data, train_labels, _ = load_files_from_dir('train/')
+        test_data, test_labels, self.test_names = load_files_from_dir('test/')
 
-"""
-        self.train_iterator, self.train_len = self.__make_iterator__(raw=train_raw,
+        train_end = TRAIN_SIZE
+        val_end = train_end + VAL_SIZE
+        test_end = TEST_SIZE
+
+        self.train_iterator, self.train_len = self.__make_iterator__(data=train_data,
+                                                                     label=train_labels,
                                                                      start=0,
                                                                      end=train_end,
                                                                      epochs=EPOCHS,
                                                                      batch_size=BATCH_SIZE)
 
-        self.validation_iterator, self.validation_len = self.__make_iterator__(raw=train_raw,
+        self.validation_iterator, self.validation_len = self.__make_iterator__(data=train_data,
+                                                                               label=train_labels,
                                                                                start=train_end,
                                                                                end=val_end,
                                                                                epochs=int(EPOCHS * VALIDATIONS_PER_EPOCH))
 
-        self.test_iterator, self.test_len = self.__make_iterator__(raw=test_raw,
+        self.test_iterator, self.test_len = self.__make_iterator__(data=test_data,
+                                                                   label=test_labels,
                                                                    start=0,
                                                                    end=test_end,
                                                                    epochs=int(EPOCHS * TESTS_PER_EPOCH))
 
-        self.mean_image = tf.Variable(initial_value=self.__mean_image_initializer__(np.array(train_raw[b'data'])[0:train_end]),
-                                      name='MeanImage',
-                                      trainable=False)
-
-        self.mapping = dict(set(zip(train_raw[b'fine_labels'], train_raw[b'coarse_labels'])))
-
-    def __make_iterator__(self, raw, start, end, epochs, batch_size=-1):
+    def __make_iterator__(self, data, label, start, end, epochs, batch_size=-1):
         epochs = max(1, epochs)
-        if batch_size < 0:
-            batch_size = (end - start)
 
-        data = np.array(raw[b'data'])[start:end]
-        coarse_labels = np.array(raw[b'coarse_labels'])[start:end].astype('int32')
-        fine_labels = np.array(raw[b'fine_labels'])[start:end].astype('int32')
+        data = np.array(data)[start:end].astype('float64')
+        label = np.array(label)[start:end].astype('int32')
 
-        dataset = tf.data.Dataset.from_tensor_slices((data, fine_labels, coarse_labels))
-        dataset = dataset.shuffle(buffer_size=(end-start), reshuffle_each_iteration=True) \
-                         .repeat(count=epochs) \
-                         .batch(batch_size=batch_size)
+        dataset = tf.data.Dataset.from_tensor_slices((data, label))
+        dataset = dataset.repeat(count=epochs)
+
+        if batch_size > 0:
+            dataset = dataset.batch(batch_size=batch_size)
+
         return dataset.make_one_shot_iterator(), len(data)
 
     def __get_train_iterator__(self):
@@ -111,14 +113,8 @@ class Data:
                        name='DataSelector')
 
     def get_batch_feed(self):
-        input_data, fine_label, coarse_label = self.__get_iterator__()
-        input_mean_shift = tf.subtract(x=tf.divide(tf.cast(input_data, tf.float32), 255.0),
-                                       y=self.mean_image,
-                                       name='MeanShift')
-        return tf.transpose(a=tf.reshape(tensor=input_mean_shift,
-                                         shape=[-1, 3, 32, 32]),
-                            perm=[0, 2, 3, 1],
-                            name='MakeImage'), input_data, fine_label, coarse_label
+        data, segmentation = self.__get_train_iterator__()
+        return data, segmentation
 
     def step_train(self):
         self.global_step += 1
@@ -137,18 +133,17 @@ class Data:
 
     def is_test(self):
         return tf.equal(self.data_type, 3)
-    """
+
 
 ###################
 # TEST ONLY
 ###################
+"""
 data = Data()
 
-"""
 data_type = tf.placeholder(name='DataType', dtype=tf.uint8)
 data = Data(data_type)
 input_layer, fine_label, coarse_label = data.get_batch_feed()
-
 
 with tf.Session() as data_sess:
     data_sess.run(tf.global_variables_initializer())
