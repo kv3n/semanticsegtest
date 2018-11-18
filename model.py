@@ -51,7 +51,6 @@ def _get_loss_(prediction, truth):
                                 name='IgnoreVoid')
 
     non_void_truth = tf.gather_nd(params=truth, indices=ignore_void_mask, name='NonVoidTruth')
-    non_void_truth = tf.one_hot(indices=non_void_truth, depth=2, name='OneHot')
     non_void_prediction = tf.gather_nd(params=prediction, indices=ignore_void_mask, name='NonVoidPrediction')
 
     loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=non_void_truth,
