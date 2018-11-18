@@ -58,7 +58,7 @@ with tf.Session() as sess:
                 val_output = sess.run([output], feed_dict={batch_data: val_data,
                                                            true_segmentation: val_true_segmentation})
 
-                summary_builder.save_ouput(val_output, val_names, 'val'+str(data_feed.validation_step), show=True)
+                summary_builder.save_ouput(val_output, val_names, 'val'+str(data_feed.validation_step))
                 print("Ran Validation: " + str(data_feed.validation_step))
 
             if run_test:
@@ -66,7 +66,7 @@ with tf.Session() as sess:
                 test_output = sess.run([output], feed_dict={batch_data: test_data,
                                                             true_segmentation: test_true_segmentation})
 
-                summary_builder.save_ouput(test_output, test_names, 'test'+str(data_feed.test_step), show=True)
+                summary_builder.save_ouput(test_output, test_names, 'test'+str(data_feed.test_step))
                 print('Ran Test: ' + str(data_feed.test_step))
 
         except tf.errors.OutOfRangeError:

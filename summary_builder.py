@@ -26,7 +26,7 @@ class SummaryBuilder:
         return log_folder
 
     def save_ouput(self, segmented_images, image_names, prefix, show=False):
-        segmented_images = segmented_images.astype('uint8')
+        segmented_images = segmented_images
         num_tests = len(segmented_images)
 
         for id in range(num_tests):
@@ -35,7 +35,7 @@ class SummaryBuilder:
                 cv2.waitKey()
                 cv2.destroyAllWindows()
 
-            cv2.imwrite(self.log_folder + prefix + '_' + image_names[id])
+            cv2.imwrite(self.log_folder + prefix + '_' + image_names[id] + '.png', segmented_images[id])
 
 
 ###################
