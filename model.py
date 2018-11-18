@@ -51,8 +51,8 @@ def _get_loss_(prediction, truth):
     non_void_truth = tf.boolean_mask(tensor=truth, mask=ignore_void_mask, name='NonVoidTruth')
     non_void_prediction = tf.boolean_mask(tensor=prediction, mask=ignore_void_mask, name='NonVoidPrediction')
 
-    loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=non_void_truth,
-                                                   logits=non_void_truth,
+    loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=non_void_prediction,
+                                                   logits=non_void_prediction,
                                                    name='SigmoidLoss')
     return loss
 
