@@ -1,6 +1,6 @@
 import pickle
 import numpy as np
-import cv2
+import matplotlib.image as mpimg
 import os
 import random
 
@@ -46,7 +46,7 @@ class Data:
             return label
 
         def loadimg(file):
-            img = cv2.imread('data/image/' + file + '.png')
+            img = mpimg.imread('data/image/' + file + '.png')
             return img
 
         def load_files_from_dir(dir_name):

@@ -1,8 +1,8 @@
-import cv2
 import os
 import shutil
 import tensorflow as tf
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class SummaryBuilder:
@@ -31,13 +31,15 @@ class SummaryBuilder:
         num_tests = len(segmented_images)
 
         for id in range(num_tests):
-            if show:
-                cv2.imshow('output', segmented_images[id])
-                cv2.waitKey()
-                cv2.destroyAllWindows()
-
             image = np.array(segmented_images[id]).astype('uint8')
-            cv2.imwrite(self.log_folder + prefix + '_' + image_names[id] + '.png', image)
+
+            plt.figure()
+            plt.imshow(image)
+            if show:
+                plt.show()
+
+            plt.savefig(self.log_folder + prefix + '_' + image_names[id] + '.png')
+            plt.close()
 
 
 ###################

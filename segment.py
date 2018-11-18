@@ -1,6 +1,7 @@
 import argparse
 import time
-import random
+import matplotlib
+matplotlib.use('agg')
 from data_feed import *
 from model import *
 from summary_builder import *
@@ -18,8 +19,6 @@ seed = args.seed
 if seed == 0:
     seed = random.randint(0, 1 << 32)
     print('Setting seed: ' + str(seed))
-
-#tf.set_random_seed(seed=seed)
 
 data_feed = Data()
 
