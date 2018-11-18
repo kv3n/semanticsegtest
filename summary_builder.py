@@ -32,7 +32,7 @@ class SummaryBuilder:
 
         for id in range(num_tests):
             image = np.array(segmented_images[id]).astype('uint8')
-
+            print(image.shape)
             plt.figure()
             plt.imshow(image)
             if show:
