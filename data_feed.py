@@ -9,11 +9,11 @@ TRAIN_SIZE = 199
 VAL_SIZE = 45
 TEST_SIZE = 45
 BATCH_SIZE = 1
-VALIDATIONS_PER_EPOCH = 2
+VALIDATIONS_PER_EPOCH = 20
 NUM_BATCHES_PER_EPOCH = TRAIN_SIZE // BATCH_SIZE
 TOTAL_BATCHES = NUM_BATCHES_PER_EPOCH * EPOCHS
 VALIDATION_INTERVAL = NUM_BATCHES_PER_EPOCH // VALIDATIONS_PER_EPOCH
-TESTS_PER_EPOCH = 1.0 / EPOCHS
+TESTS_PER_EPOCH = 0.1
 TEST_INTERVAL = int(NUM_BATCHES_PER_EPOCH // TESTS_PER_EPOCH)
 
 
@@ -91,13 +91,15 @@ class Data:
                                                           names=train_names,
                                                           label=train_labels,
                                                           start=train_end,
-                                                          end=val_end)
+                                                          end=val_end,
+                                                          batch=True)
 
         self.test_iterator = self.__make_iterator__(data=test_data,
                                                     names=test_names,
                                                     label=test_labels,
                                                     start=0,
-                                                    end=test_end)
+                                                    end=test_end,
+                                                    batch=True)
 
     def __make_iterator__(self, data, names, label, start, end, batch=False):
         data = np.array(data)[start:end].astype('float64')
