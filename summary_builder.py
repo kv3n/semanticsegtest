@@ -2,6 +2,7 @@ import cv2
 import os
 import shutil
 import tensorflow as tf
+import numpy as np
 
 
 class SummaryBuilder:
@@ -35,7 +36,8 @@ class SummaryBuilder:
                 cv2.waitKey()
                 cv2.destroyAllWindows()
 
-            cv2.imwrite(self.log_folder + prefix + '_' + image_names[id] + '.png', segmented_images[id])
+            image = np.array(segmented_images[id]).astype('uint8')
+            cv2.imwrite(self.log_folder + prefix + '_' + image_names[id] + '.png', image)
 
 
 ###################
