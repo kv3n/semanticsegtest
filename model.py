@@ -12,8 +12,6 @@ def _create_conv_layer_(name, inputs, filters, size=5, stride=1, padding='same')
                             kernel_size=[size, size],
                             strides=[stride, stride],
                             activation=tf.nn.relu,
-                            kernel_initializer=tf.contrib.layers.xavier_initializer(),
-                            bias_initializer=tf.contrib.layers.xavier_initializer(),
                             padding=padding,
                             name=layer_name)
 
@@ -26,8 +24,6 @@ def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same
                                       kernel_size=[size, size],
                                       strides=[stride, stride],
                                       activation=tf.nn.relu,
-                                      kernel_initializer=tf.contrib.layers.xavier_initializer(),
-                                      bias_initializer=tf.contrib.layers.xavier_initializer(),
                                       padding=padding,
                                       name=layer_name)
 
@@ -47,8 +43,6 @@ def _create_dense_layer_(name, inputs, nodes, activation=tf.nn.relu):
     return tf.layers.dense(inputs=inputs,
                            units=nodes,
                            activation=activation,
-                           kernel_initializer=tf.contrib.layers.xavier_initializer(),
-                           bias_initializer=tf.contrib.layers.xavier_initializer(),
                            name=layer_name)
 
 
@@ -56,7 +50,8 @@ def _get_loss_(prediction, truth):
     ignore_void_mask = tf.greater_equal(x=truth, y=0, name='IgnoreVoid')
     non_void_truth = tf.boolean_mask(tensor=truth, mask=ignore_void_mask, name='NonVoidTruth')
     non_void_prediction = tf.boolean_mask(tensor=prediction, mask=ignore_void_mask, name='NonVoidPrediction')
-    loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=non_void_truth,
+
+    loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.cast(non_void_truth, tf.float64),
                                                    logits=non_void_prediction,
                                                    name='SigmoidLoss')
 
