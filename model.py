@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 LEARNING_RATE = 0.001
+MOMENTUM = 0.99
 
 
 def _create_conv_layer_(name, inputs, filters, size=5, stride=1, padding='same'):
@@ -51,7 +52,18 @@ def _create_dense_layer_(name, inputs, nodes, activation=tf.nn.relu):
                            name=layer_name)
 
 
-def build_model(image_batch, batch_segmentation):
+def _get_loss_(prediction, truth):
+    ignore_void_mask = tf.greater_equal(x=truth, y=0, name='IgnoreVoid')
+    non_void_truth = tf.boolean_mask(tensor=truth, mask=ignore_void_mask, name='NonVoidTruth')
+    non_void_prediction = tf.boolean_mask(tensor=prediction, mask=ignore_void_mask, name='NonVoidPrediction')
+    loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=non_void_truth,
+                                                   logits=non_void_prediction,
+                                                   name='SigmoidLoss')
+
+    return loss
+
+
+def build_model(image_batch, true_segmentation):
     # Block 1
     image_batch = _create_conv_layer_(name='1', inputs=image_batch, size=3, filters=64)
     image_batch = _create_conv_layer_(name='2', inputs=image_batch, size=3, filters=64)
@@ -80,7 +92,6 @@ def build_model(image_batch, batch_segmentation):
     image_batch = _create_conv_layer_(name='13', inputs=image_batch, size=3, filters=512)
     image_batch = _create_pooling_layer_(name='5', inputs=image_batch, size=2, stride=2)
 
-
     # Replaced FC
     image_batch = _create_conv_layer_(name='FC1', inputs=image_batch, size=7, filters=4096)
     image_batch = _create_conv_layer_(name='FC2', inputs=image_batch, size=1, filters=4096)
@@ -88,7 +99,8 @@ def build_model(image_batch, batch_segmentation):
 
     # Deconvolution Layer
     output = _create_deconv_layer_(name='DeConv1', inputs=image_batch, size=64, stride=32, filters=1)
-    loss = tf.losses.sparse_softmax_cross_entropy(labels=batch_segmentation, logits=output)
-    optimize = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE).minimize(loss, name='Optimize')
+
+    loss = _get_loss_(prediction=output, truth=true_segmentation)
+    optimize = tf.train.MomentumOptimizer(learning_rate=LEARNING_RATE, momentum=MOMENTUM).minimize(loss=loss)
 
     return output, optimize, loss

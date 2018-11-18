@@ -23,15 +23,16 @@ tf.set_random_seed(seed=seed)
 
 data_type = tf.placeholder(name='DataType', dtype=tf.uint8)
 data_feed = Data(datatype_placeholder=data_type)
-batch_data, segmentation = data_feed.get_batch_feed()
+batch_data, batch_names, true_segmentation = data_feed.get_batch_feed()
 
-output, optimize, loss = build_model(image_batch=batch_data, batch_segmentation=segmentation)
+output, optimize, loss = build_model(image_batch=batch_data, true_segmentation=true_segmentation)
 
 summary_builder = SummaryBuilder(log_name)
-train_summary, validation_summary, test_summary = summary_builder.build_summary(output=output)
 
 with tf.Session() as sess:
     summary_builder.training.add_graph(graph=sess.graph)
+
+    sess.run(tf.global_variables_initializer())
 
     global_batch_count = 0
     half_epoch_count = 0
@@ -42,22 +43,21 @@ with tf.Session() as sess:
             # Run mini-batch
             ex = sess.run([batch_data], feed_dict={data_type: 1})
 
-            _, _, train_results = sess.run([optimize, output, train_summary], feed_dict={data_type: 1})
+            _, _ = sess.run([optimize, output], feed_dict={data_type: 1})
 
-            summary_builder.training.add_summary(train_results, data_feed.global_step)
             run_validation, run_test = data_feed.step_train()
             print("Ran Batch" + str(data_feed.global_step))
 
             if run_validation:
-                _, val_results = sess.run([output, validation_summary], feed_dict={data_type: 2})
+                val_output = sess.run([output], feed_dict={data_type: 2})
 
-                summary_builder.validation.add_summary(val_results, data_feed.validation_step)
+                summary_builder.save_ouput(val_output, batch_names, 'val'+data_feed.validation_step, show=True)
                 print("Ran Validation: " + str(data_feed.validation_step))
 
             if run_test:
-                _, test_results = sess.run([output, test_summary], feed_dict={data_type: 3})
+                test_output = sess.run([output], feed_dict={data_type: 3})
 
-                summary_builder.test.add_summary(test_results, data_feed.test_step)
+                summary_builder.save_ouput(test_output, batch_names, 'test' + data_feed.test_step, show=True)
                 print('Ran Test: ' + str(data_feed.test_step))
 
         except tf.errors.OutOfRangeError:

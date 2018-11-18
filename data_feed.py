@@ -20,7 +20,9 @@ class Data:
     def __init__(self, datatype_placeholder):
         def unpickle(file):
             with open('data/label/' + file + '.label', 'rb') as fo:
-                label = pickle.load(fo, encoding='bytes')
+                label = (pickle.load(fo, encoding='bytes'))
+                label = np.expand_dims(label, axis=2)
+                label += 1
             return label
 
         def loadimg(file):
@@ -49,14 +51,15 @@ class Data:
         self.validation_step = 0
         self.test_step = 0
 
-        train_data, train_labels, _ = load_files_from_dir('train/')
-        test_data, test_labels, self.test_names = load_files_from_dir('test/')
+        train_data, train_labels, train_names = load_files_from_dir('train/')
+        test_data, test_labels, test_names = load_files_from_dir('test/')
 
         train_end = TRAIN_SIZE
         val_end = train_end + VAL_SIZE
         test_end = TEST_SIZE
 
         self.train_iterator, self.train_len = self.__make_iterator__(data=train_data,
+                                                                     names=train_names,
                                                                      label=train_labels,
                                                                      start=0,
                                                                      end=train_end,
@@ -64,28 +67,33 @@ class Data:
                                                                      batch_size=BATCH_SIZE)
 
         self.validation_iterator, self.validation_len = self.__make_iterator__(data=train_data,
+                                                                               names=train_names,
                                                                                label=train_labels,
                                                                                start=train_end,
                                                                                end=val_end,
                                                                                epochs=int(EPOCHS * VALIDATIONS_PER_EPOCH))
 
         self.test_iterator, self.test_len = self.__make_iterator__(data=test_data,
+                                                                   names=test_names,
                                                                    label=test_labels,
                                                                    start=0,
                                                                    end=test_end,
                                                                    epochs=int(EPOCHS * TESTS_PER_EPOCH))
 
-    def __make_iterator__(self, data, label, start, end, epochs, batch_size=-1):
+    def __make_iterator__(self, data, names, label, start, end, epochs, batch_size=-1):
         epochs = max(1, epochs)
 
         data = np.array(data)[start:end].astype('float64')
+        names = names[start:end]
         label = np.array(label)[start:end].astype('int32')
 
-        dataset = tf.data.Dataset.from_tensor_slices((data, label))
+        dataset = tf.data.Dataset.from_tensor_slices((data, names, label))
         dataset = dataset.repeat(count=epochs)
 
-        if batch_size > 0:
-            dataset = dataset.batch(batch_size=batch_size)
+        if batch_size <= 0:
+            batch_size = end - start
+
+        dataset = dataset.batch(batch_size=batch_size)
 
         return dataset.make_one_shot_iterator(), len(data)
 
@@ -98,13 +106,6 @@ class Data:
     def __get_test_iterator__(self):
         return self.test_iterator.get_next(name='TestIterator')
 
-    def __mean_image_initializer__(self, train_data):
-        cast_data = tf.cast(train_data, tf.float32)
-        normalized_data = tf.divide(cast_data, tf.constant(255.0, tf.float32))
-        return tf.reduce_mean(normalized_data,
-                              axis=0,
-                              keepdims=True)
-
     def __get_iterator__(self):
         return tf.case(pred_fn_pairs={self.is_train(): self.__get_train_iterator__,
                                       self.is_validation(): self.__get_validation_iterator__,
@@ -113,8 +114,8 @@ class Data:
                        name='DataSelector')
 
     def get_batch_feed(self):
-        data, segmentation = self.__get_train_iterator__()
-        return data, segmentation
+        data, names, labels = self.__get_iterator__()
+        return data, names, labels
 
     def step_train(self):
         self.global_step += 1
