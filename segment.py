@@ -30,7 +30,7 @@ true_segmentation = tf.placeholder(name='TrueSegmentation', dtype=tf.int32,
 output, optimize, loss = build_model(image_batch=batch_data, true_segmentation=true_segmentation)
 
 summary_builder = SummaryBuilder(log_name)
-loss_summary = summary_builder.build_summary(loss=loss)
+loss_summary = summary_builder.build_summary(loss=loss, labels=true_segmentation, predictions=output)
 
 with tf.Session() as sess:
     summary_builder.training.add_graph(graph=sess.graph)

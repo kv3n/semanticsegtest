@@ -26,8 +26,9 @@ class SummaryBuilder:
 
         return log_folder
 
-    def build_summary(self, loss):
+    def build_summary(self, loss, labels, predictions):
         loss_summary = tf.summary.scalar('Loss', loss)
+
         return loss_summary
 
     def save_ouput(self, segmented_images, image_names, prefix, show=False):
