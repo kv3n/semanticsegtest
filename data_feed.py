@@ -1,8 +1,8 @@
 import pickle
 import numpy as np
-import tensorflow as tf
 import cv2
 import os
+import random
 
 EPOCHS = 50
 TRAIN_SIZE = 199
@@ -11,13 +11,33 @@ TEST_SIZE = 45
 BATCH_SIZE = 1
 VALIDATIONS_PER_EPOCH = 2
 NUM_BATCHES_PER_EPOCH = TRAIN_SIZE // BATCH_SIZE
+TOTAL_BATCHES = NUM_BATCHES_PER_EPOCH * EPOCHS
 VALIDATION_INTERVAL = NUM_BATCHES_PER_EPOCH // VALIDATIONS_PER_EPOCH
 TESTS_PER_EPOCH = 1.0 / EPOCHS
 TEST_INTERVAL = int(NUM_BATCHES_PER_EPOCH // TESTS_PER_EPOCH)
 
 
+class Feed:
+    def __init__(self, data, label, names, batch):
+        self.data = data
+        self.label = label
+        self.names = names
+        self.batch = batch
+        self.feed_size = len(self.data)
+
+    def get_next_batch(self):
+        if self.batch:
+            start_index = random.randint(0, self.feed_size)
+            end_index = start_index + 1
+        else:
+            start_index = 0
+            end_index = self.feed_size
+
+        return self.data[start_index:end_index], self.label[start_index:end_index], self.names[start_index:end_index]
+
+
 class Data:
-    def __init__(self, datatype_placeholder):
+    def __init__(self):
         def unpickle(file):
             with open('data/label/' + file + '.label', 'rb') as fo:
                 label = (pickle.load(fo, encoding='bytes'))
@@ -45,8 +65,6 @@ class Data:
 
             return images, labels, final_names
 
-        self.data_type = datatype_placeholder
-
         self.global_step = 0
         self.validation_step = 0
         self.test_step = 0
@@ -54,67 +72,50 @@ class Data:
         train_data, train_labels, train_names = load_files_from_dir('train/')
         test_data, test_labels, test_names = load_files_from_dir('test/')
 
+        self.image_width = train_data[0].shape[0]
+        self.image_height = train_data[0].shape[1]
+        self.image_depth = train_data[0].shape[2]
+
         train_end = TRAIN_SIZE
         val_end = train_end + VAL_SIZE
         test_end = TEST_SIZE
 
-        self.train_iterator, self.train_len = self.__make_iterator__(data=train_data,
-                                                                     names=train_names,
-                                                                     label=train_labels,
-                                                                     start=0,
-                                                                     end=train_end,
-                                                                     epochs=EPOCHS,
-                                                                     batch_size=BATCH_SIZE)
+        self.train_iterator = self.__make_iterator__(data=train_data,
+                                                     names=train_names,
+                                                     label=train_labels,
+                                                     start=0,
+                                                     end=train_end,
+                                                     batch=True)
 
-        self.validation_iterator, self.validation_len = self.__make_iterator__(data=train_data,
-                                                                               names=train_names,
-                                                                               label=train_labels,
-                                                                               start=train_end,
-                                                                               end=val_end,
-                                                                               epochs=int(EPOCHS * VALIDATIONS_PER_EPOCH))
+        self.validation_iterator = self.__make_iterator__(data=train_data,
+                                                          names=train_names,
+                                                          label=train_labels,
+                                                          start=train_end,
+                                                          end=val_end)
 
-        self.test_iterator, self.test_len = self.__make_iterator__(data=test_data,
-                                                                   names=test_names,
-                                                                   label=test_labels,
-                                                                   start=0,
-                                                                   end=test_end,
-                                                                   epochs=int(EPOCHS * TESTS_PER_EPOCH))
+        self.test_iterator = self.__make_iterator__(data=test_data,
+                                                    names=test_names,
+                                                    label=test_labels,
+                                                    start=0,
+                                                    end=test_end)
 
-    def __make_iterator__(self, data, names, label, start, end, epochs, batch_size=-1):
-        epochs = max(1, epochs)
-
+    def __make_iterator__(self, data, names, label, start, end, batch=False):
         data = np.array(data)[start:end].astype('float64')
         names = names[start:end]
         label = np.array(label)[start:end].astype('int32')
 
-        dataset = tf.data.Dataset.from_tensor_slices((data, names, label))
-        dataset = dataset.repeat(count=epochs)
+        return Feed(data, label, names, batch)
 
-        if batch_size <= 0:
-            batch_size = end - start
+    def __get_iterator__(self, data_type):
+        if data_type == 1:
+            return self.train_iterator
+        elif data_type == 2:
+            return self.validation_iterator
+        else:
+            return self.test_iterator
 
-        dataset = dataset.batch(batch_size=batch_size)
-
-        return dataset.make_one_shot_iterator(), len(data)
-
-    def __get_train_iterator__(self):
-        return self.train_iterator.get_next(name='TrainIterator')
-
-    def __get_validation_iterator__(self):
-        return self.validation_iterator.get_next(name='ValidationIterator')
-
-    def __get_test_iterator__(self):
-        return self.test_iterator.get_next(name='TestIterator')
-
-    def __get_iterator__(self):
-        return tf.case(pred_fn_pairs={self.is_train(): self.__get_train_iterator__,
-                                      self.is_validation(): self.__get_validation_iterator__,
-                                      self.is_test(): self.__get_test_iterator__},
-                       exclusive=True,
-                       name='DataSelector')
-
-    def get_batch_feed(self):
-        data, names, labels = self.__get_iterator__()
+    def get_batch_feed(self, data_type):
+        data, names, labels = self.__get_iterator__(data_type).get_next_batch()
         return data, names, labels
 
     def step_train(self):
@@ -124,16 +125,9 @@ class Data:
         run_validation = (self.global_step % VALIDATION_INTERVAL == 0)
         run_test = (self.global_step % TEST_INTERVAL == 0)
 
-        return run_validation, run_test
+        end_test = (self.global_step % TOTAL_BATCHES == 0)
 
-    def is_train(self):
-        return tf.equal(self.data_type, 1)
-
-    def is_validation(self):
-        return tf.equal(self.data_type, 2)
-
-    def is_test(self):
-        return tf.equal(self.data_type, 3)
+        return run_validation, run_test, end_test
 
 
 ###################

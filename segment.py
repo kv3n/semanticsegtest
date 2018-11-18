@@ -19,11 +19,14 @@ if seed == 0:
     seed = random.randint(0, 1 << 32)
     print('Setting seed: ' + str(seed))
 
-tf.set_random_seed(seed=seed)
+#tf.set_random_seed(seed=seed)
 
-data_type = tf.placeholder(name='DataType', dtype=tf.uint8)
-data_feed = Data(datatype_placeholder=data_type)
-batch_data, batch_names, true_segmentation = data_feed.get_batch_feed()
+data_feed = Data()
+
+batch_data = tf.placeholder(name='BatchData', dtype=tf.float64,
+                            shape=[None, data_feed.image_width, data_feed.image_height, data_feed.image_depth])
+true_segmentation = tf.placeholder(name='TrueSegmentation', dtype=tf.int32,
+                                   shape=[None, data_feed.image_width, data_feed.image_height, 1])
 
 output, optimize, loss = build_model(image_batch=batch_data, true_segmentation=true_segmentation)
 
@@ -38,26 +41,32 @@ with tf.Session() as sess:
     half_epoch_count = 0
     test_epoch_count = 0
 
-    while True:
+    end_of_epochs = False
+    while not end_of_epochs:
         try:
             # Run mini-batch
-            ex = sess.run([batch_data], feed_dict={data_type: 1})
+            train_data, train_true_segmentation, _ = data_feed.get_batch_feed(data_type=1)
 
-            _, _ = sess.run([loss, output], feed_dict={data_type: 1})
+            _, _ = sess.run([optimize, output], feed_dict={batch_data: train_data,
+                                                           true_segmentation: train_true_segmentation})
 
-            run_validation, run_test = data_feed.step_train()
+            run_validation, run_test, end_of_epochs = data_feed.step_train()
             print("Ran Batch" + str(data_feed.global_step))
 
             if run_validation:
-                val_output = sess.run([output], feed_dict={data_type: 2})
+                val_data, val_true_segmentation, val_names = data_feed.get_batch_feed(data_type=2)
+                val_output = sess.run([output], feed_dict={batch_data: val_data,
+                                                           true_segmentation: val_true_segmentation})
 
-                summary_builder.save_ouput(val_output, batch_names, 'val'+str(data_feed.validation_step), show=True)
+                summary_builder.save_ouput(val_output, val_names, 'val'+str(data_feed.validation_step), show=True)
                 print("Ran Validation: " + str(data_feed.validation_step))
 
             if run_test:
-                test_output = sess.run([output], feed_dict={data_type: 3})
+                test_data, test_true_segmentation, test_names = data_feed.get_batch_feed(data_type=3)
+                test_output = sess.run([output], feed_dict={batch_data: test_data,
+                                                            true_segmentation: test_true_segmentation})
 
-                summary_builder.save_ouput(test_output, batch_names, 'test'+str(data_feed.test_step), show=True)
+                summary_builder.save_ouput(test_output, test_names, 'test'+str(data_feed.test_step), show=True)
                 print('Ran Test: ' + str(data_feed.test_step))
 
         except tf.errors.OutOfRangeError:
