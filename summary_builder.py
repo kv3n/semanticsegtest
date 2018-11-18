@@ -27,11 +27,11 @@ class SummaryBuilder:
         return log_folder
 
     def save_ouput(self, segmented_images, image_names, prefix, show=False):
-        segmented_images = segmented_images
+        segmented_images = segmented_images[0].astype('uint8')
         num_tests = len(segmented_images)
 
         for id in range(num_tests):
-            image = np.array(segmented_images[id]).astype('uint8')
+            image = segmented_images[id]
             print(image.shape)
             plt.figure()
             plt.imshow(image)
