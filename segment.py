@@ -43,7 +43,7 @@ with tf.Session() as sess:
             # Run mini-batch
             ex = sess.run([batch_data], feed_dict={data_type: 1})
 
-            _, _ = sess.run([optimize, output], feed_dict={data_type: 1})
+            _, _ = sess.run([loss, output], feed_dict={data_type: 1})
 
             run_validation, run_test = data_feed.step_train()
             print("Ran Batch" + str(data_feed.global_step))
@@ -51,13 +51,13 @@ with tf.Session() as sess:
             if run_validation:
                 val_output = sess.run([output], feed_dict={data_type: 2})
 
-                summary_builder.save_ouput(val_output, batch_names, 'val'+data_feed.validation_step, show=True)
+                summary_builder.save_ouput(val_output, batch_names, 'val'+str(data_feed.validation_step), show=True)
                 print("Ran Validation: " + str(data_feed.validation_step))
 
             if run_test:
                 test_output = sess.run([output], feed_dict={data_type: 3})
 
-                summary_builder.save_ouput(test_output, batch_names, 'test' + data_feed.test_step, show=True)
+                summary_builder.save_ouput(test_output, batch_names, 'test'+str(data_feed.test_step), show=True)
                 print('Ran Test: ' + str(data_feed.test_step))
 
         except tf.errors.OutOfRangeError:
