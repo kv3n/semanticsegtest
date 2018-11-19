@@ -18,11 +18,10 @@ TEST_INTERVAL = int(NUM_BATCHES_PER_EPOCH // TESTS_PER_EPOCH)
 
 
 class Feed:
-    def __init__(self, data, label, names, gt, batch):
+    def __init__(self, data, label, names, batch):
         self.data = data
         self.label = label
         self.names = names
-        self.gt = gt
         self.batch = batch
         self.feed_size = len(self.data)
 
@@ -34,7 +33,7 @@ class Feed:
             start_index = 0
             end_index = self.feed_size
 
-        return self.data[start_index:end_index], self.label[start_index:end_index], self.names[start_index:end_index], self.gt[start_index:end_index]
+        return self.data[start_index:end_index], self.names[start_index:end_index], self.label[start_index:end_index]
 
 
 class Data:
@@ -114,7 +113,7 @@ class Data:
         label = np.array(label)[start:end].astype('int32')
         gt = np.array(gt)[start:end].astype('int32')
 
-        return Feed(data, label, names, gt, batch)
+        return Feed(data=data, label=label, names=names, batch=batch)
 
     def __get_iterator__(self, data_type):
         if data_type == 1:
@@ -125,8 +124,8 @@ class Data:
             return self.test_iterator
 
     def get_batch_feed(self, data_type):
-        data, names, labels, gt = self.__get_iterator__(data_type).get_next_batch()
-        return data, names, labels, gt
+        data, names, labels = self.__get_iterator__(data_type).get_next_batch()
+        return data, names, labels
 
     def step_train(self):
         self.global_step += 1

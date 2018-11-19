@@ -27,9 +27,6 @@ batch_data = tf.placeholder(name='BatchData', dtype=tf.float64,
 true_segmentation = tf.placeholder(name='TrueSegmentation', dtype=tf.int32,
                                    shape=[None, data_feed.image_width, data_feed.image_height, 1])
 
-ground_truth = tf.placeholder(name='TrueSegmentation', dtype=tf.int32,
-                              shape=[None, data_feed.image_width, data_feed.image_height, 1])
-
 output, optimize, loss = build_model(image_batch=batch_data, true_segmentation=true_segmentation)
 
 summary_builder = SummaryBuilder(log_name)
@@ -48,11 +45,10 @@ with tf.Session() as sess:
     while not end_of_epochs:
         try:
             # Run mini-batch
-            train_data, train_true_segmentation, _, train_gt = data_feed.get_batch_feed(data_type=1)
+            train_data, _, train_true_segmentation = data_feed.get_batch_feed(data_type=1)
 
             _, output_results, loss_val = sess.run([optimize, output, loss_summary], feed_dict={batch_data: train_data,
-                                                                                                true_segmentation: train_true_segmentation,
-                                                                                                ground_truth: train_gt})
+                                                                                                true_segmentation: train_true_segmentation})
 
             summary_builder.training.add_summary(loss_val, global_step=data_feed.global_step)
 
@@ -62,19 +58,17 @@ with tf.Session() as sess:
             print('------------------------------------------------------------------')
 
             if run_validation:
-                val_data, val_true_segmentation, val_names, val_gt = data_feed.get_batch_feed(data_type=2)
+                val_data, val_names, val_true_segmentation = data_feed.get_batch_feed(data_type=2)
                 val_output = sess.run([output], feed_dict={batch_data: val_data,
-                                                           true_segmentation: val_true_segmentation,
-                                                           ground_truth: val_gt})
+                                                           true_segmentation: val_true_segmentation})
 
                 summary_builder.save_ouput(val_output, val_names, 'val'+str(data_feed.validation_step))
                 print("Ran Validation: " + str(data_feed.validation_step))
 
             if run_test:
-                test_data, test_true_segmentation, test_names, test_gt = data_feed.get_batch_feed(data_type=3)
+                test_data, test_names, test_true_segmentation = data_feed.get_batch_feed(data_type=3)
                 test_output = sess.run([output], feed_dict={batch_data: test_data,
-                                                            true_segmentation: test_true_segmentation,
-                                                            ground_truth: test_gt})
+                                                            true_segmentation: test_true_segmentation})
 
                 summary_builder.save_ouput(test_output, test_names, 'test'+str(data_feed.test_step))
                 print('Ran Test: ' + str(data_feed.test_step))
