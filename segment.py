@@ -47,6 +47,8 @@ with tf.Session() as sess:
             # Run mini-batch
             train_data, _, train_true_segmentation = data_feed.get_batch_feed(data_type=1)
 
+            print(train_data.shape)
+
             _, output_results, loss_val = sess.run([optimize, output, loss_summary], feed_dict={batch_data: train_data,
                                                                                                 true_segmentation: train_true_segmentation})
 
@@ -54,7 +56,7 @@ with tf.Session() as sess:
 
             run_validation, run_test, end_of_epochs = data_feed.step_train()
             print('Ran Batch' + str(data_feed.global_step))
-            print(output_results)
+            print(output_results.shape)
             print('------------------------------------------------------------------')
 
             if run_validation:
