@@ -27,12 +27,11 @@ class Feed:
 
     def get_next_batch(self):
         if self.batch:
-            start_index = random.randint(0, self.feed_size)
+            start_index = random.randint(0, self.feed_size - 1)
             end_index = start_index + 1
         else:
             start_index = 0
             end_index = self.feed_size
-
         return self.data[start_index:end_index], self.names[start_index:end_index], self.label[start_index:end_index]
 
 
