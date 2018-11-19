@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 LEARNING_RATE = 0.001
 MOMENTUM = 0.99
@@ -42,14 +43,19 @@ def _create_pooling_layer_(name, inputs, size=2, stride=2, padding='same'):
 
 
 def _get_loss_(prediction, truth):
-    ignore_void_mask = tf.where(condition=tf.greater_equal(x=truth, y=0),
-                                name='IgnoreVoid')
+    non_void_pixels = tf.greater_equal(x=truth, y=0.0, name='NonVoidPixels')
 
-    non_void_truth = tf.gather_nd(params=truth, indices=ignore_void_mask, name='NonVoidTruth')
-    non_void_prediction = tf.gather_nd(params=prediction, indices=ignore_void_mask, name='NonVoidPrediction')
+    ignore_void_mask = tf.where(condition=non_void_pixels, name='NonVoidMask')
 
-    loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=non_void_truth,
-                                           logits=non_void_prediction)
+    non_void_truth = tf.gather_nd(params=truth, indices=ignore_void_mask,
+                                  name='NonVoidTruth')
+    non_void_prediction = tf.gather_nd(params=prediction, indices=ignore_void_mask,
+                                       name='NonVoidPrediction')
+
+    loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=non_void_truth, logits=non_void_prediction,
+                                                   name='SigmoidLoss')
+
+    loss = tf.reduce_mean(input_tensor=loss, name='ReduceMeanLoss')
     return loss
 
 
@@ -94,3 +100,14 @@ def build_model(image_batch, true_segmentation):
     optimize = tf.train.MomentumOptimizer(learning_rate=LEARNING_RATE, momentum=MOMENTUM).minimize(loss=loss)
 
     return output, optimize, loss
+
+
+#################
+# TESTING
+#################
+"""
+tf.enable_eager_execution()
+prediction = np.array([[[[0.0], [0.4], [0.2]], [[-1.0], [-0.2], [-0.6]]]])
+labels = np.array([[[[1.0], [1.0], [0.0]], [[-1.0], [-1.0], [0.0]]]])
+loss = _get_loss_(prediction, labels)
+"""
