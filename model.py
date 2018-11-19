@@ -13,7 +13,9 @@ def _create_conv_layer_(name, inputs, filters, size=5, stride=1, padding='same')
                             strides=[stride, stride],
                             activation=tf.nn.relu,
                             padding=padding,
-                            name=layer_name)
+                            name=layer_name,
+                            bias_initializer=tf.contrib.layers.xavier_initializer(),
+                            kernel_initializer=tf.contrib.layers.xavier_initializer())
 
 
 def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same'):
@@ -25,7 +27,9 @@ def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same
                                       strides=[stride, stride],
                                       activation=tf.nn.relu,
                                       padding=padding,
-                                      name=layer_name)
+                                      name=layer_name,
+                                      bias_initializer=tf.contrib.layers.xavier_initializer(),
+                                      kernel_initializer=tf.contrib.layers.xavier_initializer())
 
 
 def _create_pooling_layer_(name, inputs, size=2, stride=2, padding='same'):
@@ -34,16 +38,9 @@ def _create_pooling_layer_(name, inputs, size=2, stride=2, padding='same'):
                                    pool_size=[size, size],
                                    strides=[stride, stride],
                                    name=layer_name,
-                                   padding=padding)
-
-
-def _create_dense_layer_(name, inputs, nodes, activation=tf.nn.relu):
-    layer_name = 'Dense' + str(name) + '-' + str(nodes)
-
-    return tf.layers.dense(inputs=inputs,
-                           units=nodes,
-                           activation=activation,
-                           name=layer_name)
+                                   padding=padding,
+                                   bias_initializer=tf.contrib.layers.xavier_initializer(),
+                                   kernel_initializer=tf.contrib.layers.xavier_initializer())
 
 
 def _get_loss_(prediction, truth):
@@ -94,7 +91,6 @@ def build_model(image_batch, true_segmentation):
 
     # Deconvolution Layer
     output = _create_deconv_layer_(name='DeConv1', inputs=image_batch, size=64, stride=32, filters=1)
-    output = tf.nn.softmax(output, name='Softmax')
 
     loss = _get_loss_(prediction=output, truth=true_segmentation)
     optimize = tf.train.MomentumOptimizer(learning_rate=LEARNING_RATE, momentum=MOMENTUM).minimize(loss=loss)
