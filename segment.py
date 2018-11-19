@@ -23,9 +23,9 @@ if seed == 0:
 data_feed = Data()
 
 batch_data = tf.placeholder(name='BatchData', dtype=tf.float64,
-                            shape=[None, data_feed.image_width, data_feed.image_height, data_feed.image_depth])
+                            shape=[None, data_feed.image_height, data_feed.image_width, data_feed.image_depth])
 true_segmentation = tf.placeholder(name='TrueSegmentation', dtype=tf.int32,
-                                   shape=[None, data_feed.image_width, data_feed.image_height, 1])
+                                   shape=[None, data_feed.image_height, data_feed.image_width, 1])
 
 output, optimize, loss = build_model(image_batch=batch_data, true_segmentation=true_segmentation)
 

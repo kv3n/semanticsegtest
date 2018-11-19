@@ -75,8 +75,8 @@ class Data:
         train_data, train_labels, train_names, train_gt = load_files_from_dir('train/')
         test_data, test_labels, test_names, test_gt = load_files_from_dir('test/')
 
-        self.image_width = train_data[0].shape[0]
-        self.image_height = train_data[0].shape[1]
+        self.image_height = train_data[0].shape[0]
+        self.image_width = train_data[0].shape[1]
         self.image_depth = train_data[0].shape[2]
 
         train_end = TRAIN_SIZE

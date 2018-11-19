@@ -31,21 +31,28 @@ class SummaryBuilder:
 
         return loss_summary
 
+    def __make_image__(self, in_image):
+        newimage = np.zeros(shape=(in_image.shape[0], in_image.shape[1], 3),
+                            dtype='uint8')
+
+        in_image = np.squeeze(in_image, axis=2)
+
+        road_pixels = in_image > 0.0
+        newimage[road_pixels] = [255, 0, 255]  # Road Pixels colored
+        newimage[np.logical_not(road_pixels)] = [255, 0, 0]  # not road pixels colored
+
+        return newimage
+
     def save_ouput(self, segmented_images, image_names, prefix, show=False):
         segmented_images = segmented_images[0]
         num_tests = len(segmented_images)
 
         for id in range(num_tests):
-            image = segmented_images[id]
-            print('Save: ' + str(image.shape))
-            #image = np.squeeze(image, axis=2)
-            road_pixels = image > 0.0
-            np.place(image, road_pixels, [[255, 0, 255]])  # Road pixels
-            np.place(image, np.logical_not(road_pixels), [[255, 0, 0]])  # not road pixels
-            image = image.astype('uint8')
-            print(image.shape)
+            newimage = self.__make_image__(segmented_images[id])
+
+            print('Save: ' + image_names[id] + ': (' + str(newimage.shape) + ')')
             plt.figure()
-            plt.imshow(image)
+            plt.imshow(newimage)
             if show:
                 plt.show()
 
@@ -57,7 +64,7 @@ class SummaryBuilder:
 # TEST ONLY
 ###################
 """
-confusion_matrix = np.array([[2, 4], [3, 1]])
-summary = SummaryBuilder('Test', None)
-summary.validate_confusion_matrix(confusion_matrix, 0)
+test = [np.array([[[[1], [-1]], [[-1], [1]]]])]
+summary = SummaryBuilder('Test')
+summary.save_ouput(test, 'blah', '2', show=False)
 """
