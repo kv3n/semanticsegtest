@@ -38,9 +38,7 @@ def _create_pooling_layer_(name, inputs, size=2, stride=2, padding='same'):
                                    pool_size=[size, size],
                                    strides=[stride, stride],
                                    name=layer_name,
-                                   padding=padding,
-                                   bias_initializer=tf.contrib.layers.xavier_initializer(),
-                                   kernel_initializer=tf.contrib.layers.xavier_initializer())
+                                   padding=padding)
 
 
 def _get_loss_(prediction, truth):
@@ -91,7 +89,7 @@ def build_model(image_batch, true_segmentation):
 
     # Deconvolution Layer
     output = _create_deconv_layer_(name='DeConv1', inputs=image_batch, size=64, stride=32, filters=1)
-    
+
     loss = _get_loss_(prediction=output, truth=true_segmentation)
     optimize = tf.train.MomentumOptimizer(learning_rate=LEARNING_RATE, momentum=MOMENTUM).minimize(loss=loss)
 
