@@ -94,6 +94,7 @@ def build_model(image_batch, true_segmentation):
 
     # Deconvolution Layer
     output = _create_deconv_layer_(name='DeConv1', inputs=image_batch, size=64, stride=32, filters=1)
+    output = tf.nn.softmax(output, name='Softmax')
 
     loss = _get_loss_(prediction=output, truth=true_segmentation)
     optimize = tf.train.MomentumOptimizer(learning_rate=LEARNING_RATE, momentum=MOMENTUM).minimize(loss=loss)
