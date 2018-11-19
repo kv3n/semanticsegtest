@@ -26,7 +26,7 @@ def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same
                                       filters=filters,
                                       kernel_size=[size, size],
                                       strides=[stride, stride],
-                                      activation=tf.nn.relu,
+                                      activation=None,
                                       padding=padding,
                                       name=layer_name,
                                       bias_initializer=tf.contrib.layers.xavier_initializer(),
