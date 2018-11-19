@@ -36,7 +36,7 @@ class SummaryBuilder:
 
         for id in range(num_tests):
             image = segmented_images[id]
-            print(image.shape)
+            print('Save: ' + image.shape)
             image = np.squeeze(image, axis=2)
             print(image.shape)
             plt.figure()
