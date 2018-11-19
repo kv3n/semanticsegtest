@@ -110,7 +110,7 @@ class Data:
     def __make_iterator__(self, data, names, label, gt, start, end, batch=False):
         data = np.array(data)[start:end].astype('float64')
         names = names[start:end]
-        label = np.array(label)[start:end].astype('float64')
+        label = np.array(label)[start:end].astype('int32')
         gt = np.array(gt)[start:end].astype('int32')
 
         return Feed(data=data, label=label, names=names, batch=batch)

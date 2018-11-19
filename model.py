@@ -52,10 +52,9 @@ def _get_loss_(prediction, truth):
     non_void_prediction = tf.gather_nd(params=prediction, indices=ignore_void_mask,
                                        name='NonVoidPrediction')
 
-    loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=non_void_truth, logits=non_void_prediction,
-                                                   name='SigmoidLoss')
+    loss = tf.losses.sigmoid_cross_entropy(labels=non_void_truth, logits=non_void_prediction,
+                                           name='SigmoidLoss')
 
-    loss = tf.reduce_mean(input_tensor=loss, name='ReduceMeanLoss')
     return loss
 
 
