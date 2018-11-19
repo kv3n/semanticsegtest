@@ -5,7 +5,7 @@ import os
 import random
 
 EPOCHS = 50
-TRAIN_SIZE = 199
+TRAIN_SIZE = 1
 VAL_SIZE = 45
 TEST_SIZE = 45
 BATCH_SIZE = 1
@@ -18,10 +18,11 @@ TEST_INTERVAL = int(NUM_BATCHES_PER_EPOCH // TESTS_PER_EPOCH)
 
 
 class Feed:
-    def __init__(self, data, label, names, batch):
+    def __init__(self, data, label, names, gt, batch):
         self.data = data
         self.label = label
         self.names = names
+        self.gt = gt
         self.batch = batch
         self.feed_size = len(self.data)
 
@@ -33,7 +34,7 @@ class Feed:
             start_index = 0
             end_index = self.feed_size
 
-        return self.data[start_index:end_index], self.label[start_index:end_index], self.names[start_index:end_index]
+        return self.data[start_index:end_index], self.label[start_index:end_index], self.names[start_index:end_index], self.gt[start_index:end_index]
 
 
 class Data:
@@ -46,13 +47,14 @@ class Data:
             return label
 
         def loadimg(file):
-            img = mpimg.imread('data/image/' + file + '.png')
+            img = mpimg.imread('data/' + file + '.png')
             return img
 
         def load_files_from_dir(dir_name):
             filenames = os.listdir('data/image/' + dir_name)
             images = []
             labels = []
+            gt = []
             final_names = []
             for filename in filenames:
                 if not filename == '.DS_Store':
@@ -60,17 +62,19 @@ class Data:
                     final_names.append(stripped_name)
                     split = stripped_name.split('_')
                     label_name = split[0] + '_road_' + split[1]
-                    images.append(loadimg(dir_name + stripped_name))
+                    gt_name = 'gt/' + dir_name + label_name
+                    images.append(loadimg('image/' + dir_name + stripped_name))
                     labels.append(unpickle(dir_name + label_name))
+                    gt.append(loadimg(gt_name))
 
-            return images, labels, final_names
+            return images, labels, final_names, gt
 
         self.global_step = 0
         self.validation_step = 0
         self.test_step = 0
 
-        train_data, train_labels, train_names = load_files_from_dir('train/')
-        test_data, test_labels, test_names = load_files_from_dir('test/')
+        train_data, train_labels, train_names, train_gt = load_files_from_dir('train/')
+        test_data, test_labels, test_names, test_gt = load_files_from_dir('test/')
 
         self.image_width = train_data[0].shape[0]
         self.image_height = train_data[0].shape[1]
@@ -83,6 +87,7 @@ class Data:
         self.train_iterator = self.__make_iterator__(data=train_data,
                                                      names=train_names,
                                                      label=train_labels,
+                                                     gt=train_gt,
                                                      start=0,
                                                      end=train_end,
                                                      batch=True)
@@ -90,6 +95,7 @@ class Data:
         self.validation_iterator = self.__make_iterator__(data=train_data,
                                                           names=train_names,
                                                           label=train_labels,
+                                                          gt=train_gt,
                                                           start=train_end,
                                                           end=val_end,
                                                           batch=True)
@@ -97,16 +103,18 @@ class Data:
         self.test_iterator = self.__make_iterator__(data=test_data,
                                                     names=test_names,
                                                     label=test_labels,
+                                                    gt=test_gt,
                                                     start=0,
                                                     end=test_end,
                                                     batch=True)
 
-    def __make_iterator__(self, data, names, label, start, end, batch=False):
+    def __make_iterator__(self, data, names, label, gt, start, end, batch=False):
         data = np.array(data)[start:end].astype('float64')
         names = names[start:end]
         label = np.array(label)[start:end].astype('int32')
+        gt = np.array(gt)[start:end].astype('int32')
 
-        return Feed(data, label, names, batch)
+        return Feed(data, label, names, gt, batch)
 
     def __get_iterator__(self, data_type):
         if data_type == 1:
@@ -117,8 +125,8 @@ class Data:
             return self.test_iterator
 
     def get_batch_feed(self, data_type):
-        data, names, labels = self.__get_iterator__(data_type).get_next_batch()
-        return data, names, labels
+        data, names, labels, gt = self.__get_iterator__(data_type).get_next_batch()
+        return data, names, labels, gt
 
     def step_train(self):
         self.global_step += 1
