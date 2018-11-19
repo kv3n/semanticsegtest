@@ -6,11 +6,11 @@ import os
 import random
 
 EPOCHS = 50
-TRAIN_SIZE = 199
-VAL_SIZE = 45
-TEST_SIZE = 45
+TRAIN_SIZE = 1 #199
+VAL_SIZE = 1 #45
+TEST_SIZE = 1 #45
 BATCH_SIZE = 1
-VALIDATIONS_PER_EPOCH = 5
+VALIDATIONS_PER_EPOCH = 1
 NUM_BATCHES_PER_EPOCH = TRAIN_SIZE // BATCH_SIZE
 TOTAL_BATCHES = NUM_BATCHES_PER_EPOCH * EPOCHS
 VALIDATION_INTERVAL = NUM_BATCHES_PER_EPOCH // VALIDATIONS_PER_EPOCH
@@ -28,7 +28,10 @@ class Feed:
 
     def get_next_batch(self):
         if self.batch:
-            start_index = random.randint(0, self.feed_size - 1)
+            if self.feed_size > 1:
+                start_index = random.randint(0, self.feed_size - 1)
+            else:
+                start_index = 0
             end_index = start_index + 1
         else:
             start_index = 0
