@@ -43,7 +43,7 @@ def _create_pooling_layer_(name, inputs, size=2, stride=2, padding='same'):
 
 
 def _get_loss_(prediction, truth):
-    non_void_pixels = tf.greater_equal(x=truth, y=0.0, name='NonVoidPixels')
+    non_void_pixels = tf.greater_equal(x=truth, y=0, name='NonVoidPixels')
 
     ignore_void_mask = tf.where(condition=non_void_pixels, name='NonVoidMask')
 
