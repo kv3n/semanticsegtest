@@ -5,7 +5,7 @@ import os
 import random
 
 EPOCHS = 50
-TRAIN_SIZE = 1
+TRAIN_SIZE = 2
 VAL_SIZE = 45
 TEST_SIZE = 45
 BATCH_SIZE = 1
