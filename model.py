@@ -53,7 +53,6 @@ def _get_loss_(prediction, truth):
                                        name='NonVoidPrediction')
 
     loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.cast(non_void_truth, tf.float64), logits=non_void_prediction)
-    loss = tf.reduce_mean(tf.squared_difference(loss))
 
     return loss
 
