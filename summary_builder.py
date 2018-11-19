@@ -38,10 +38,10 @@ class SummaryBuilder:
         for id in range(num_tests):
             image = segmented_images[id]
             print('Save: ' + str(image.shape))
-            # image = np.squeeze(image, axis=2)
+            #image = np.squeeze(image, axis=2)
             road_pixels = image > 0.0
-            image = np.put(image, np.where(road_pixels), [255, 0, 255])  # Road pixels
-            image = np.put(image, np.where(np.logical_not(road_pixels)), [255, 0, 0])  # not road pixels
+            np.place(image, road_pixels, [[255, 0, 255]])  # Road pixels
+            np.place(image, np.logical_not(road_pixels), [[255, 0, 0]])  # not road pixels
             image = image.astype('uint8')
             print(image.shape)
             plt.figure()
