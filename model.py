@@ -53,8 +53,7 @@ def _get_loss_(prediction, truth):
                                        name='NonVoidPrediction')
 
     loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.cast(non_void_truth, tf.float64), logits=non_void_prediction)
-
-    return loss
+    return tf.reduce_mean(tf.square(loss))
 
 
 def build_model(image_batch, true_segmentation):
