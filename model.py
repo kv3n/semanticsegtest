@@ -26,7 +26,7 @@ def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same
                                       filters=filters,
                                       kernel_size=[size, size],
                                       strides=[stride, stride],
-                                      activation=tf.nn.sigmoid,
+                                      activation=None,
                                       padding=padding,
                                       name=layer_name,
                                       bias_initializer=tf.contrib.layers.xavier_initializer(),
@@ -52,7 +52,8 @@ def _get_loss_(prediction, truth):
     non_void_prediction = tf.gather_nd(params=prediction, indices=ignore_void_mask,
                                        name='NonVoidPrediction')
 
-    loss = tf.losses.mean_squared_error(labels=non_void_truth, predictions=non_void_prediction)
+    loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.cast(non_void_truth, tf.float64), logits=non_void_prediction)
+    loss = tf.reduce_mean(tf.squared_difference(loss))
 
     return loss
 
