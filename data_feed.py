@@ -42,7 +42,6 @@ class Data:
             with open('data/label/' + file + '.label', 'rb') as fo:
                 label = (pickle.load(fo, encoding='bytes'))
                 label = np.expand_dims(label, axis=2)
-                label += 1
             return label
 
         def loadimg(file):
