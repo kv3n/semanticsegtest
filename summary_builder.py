@@ -32,7 +32,6 @@ class SummaryBuilder:
         return loss_summary
 
     def save_ouput(self, segmented_images, image_names, prefix, show=False):
-        segmented_images = segmented_images[0].astype('uint8')
         num_tests = len(segmented_images)
 
         for id in range(num_tests):

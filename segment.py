@@ -57,7 +57,11 @@ with tf.Session() as sess:
             run_validation, run_test, end_of_epochs = data_feed.step_train()
             print('Ran Batch' + str(data_feed.global_step))
             print(output_results.shape)
-            print(output_results)
+            print('Num Greater 0: ' + str((np.where(output_results > 0.0)).size))
+            print('Num Less 0: ' + str((np.where(output_results < 0.0)).size))
+            print('Num Greater 1: ' + str((np.where(output_results > 1.0)).size))
+            print('Num Less -1: ' + str((np.where(output_results < -1.0)).size))
+
             print('------------------------------------------------------------------')
 
             if run_validation:
