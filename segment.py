@@ -52,10 +52,7 @@ with tf.Session() as sess:
             _, output_results, loss_val = sess.run([optimize, output, loss_summary], feed_dict={batch_data: train_data,
                                                                                                 true_segmentation: train_true_segmentation})
 
-            print('Loss')
-            print(loss_val)
-            print('-----------')
-            #summary_builder.training.add_summary(loss_val, global_step=data_feed.global_step)
+            summary_builder.training.add_summary(loss_val, global_step=data_feed.global_step)
 
             run_validation, run_test, end_of_epochs = data_feed.step_train()
             print('Ran Batch' + str(data_feed.global_step))
