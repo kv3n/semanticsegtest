@@ -10,9 +10,13 @@ class SummaryBuilder:
     def __init__(self, log_name):
         self.log_folder = self.__make_log_folder__(log_name)
 
-        self.training = tf.summary.FileWriter(logdir='logs/' + log_name + '_train/')
-        self.validation = tf.summary.FileWriter(logdir='logs/' + log_name + '_val/')
-        self.test = tf.summary.FileWriter(logdir='logs/' + log_name + '_test/')
+        self.training = None
+        self.validation = None
+        self.test = None
+        if not tf.executing_eagerly:
+            self.training = tf.summary.FileWriter(logdir='logs/' + log_name + '_train/')
+            self.validation = tf.summary.FileWriter(logdir='logs/' + log_name + '_val/')
+            self.test = tf.summary.FileWriter(logdir='logs/' + log_name + '_test/')
 
     def __make_log_folder__(self, log_name):
         output_folder = 'output/'
@@ -28,8 +32,12 @@ class SummaryBuilder:
         return log_folder
 
     def build_summary(self, loss, labels, predictions):
-        loss_summary = tf.summary.scalar('Loss', loss)
-        iou_summary = tf.summary.scalar('IOU', self.__get_iou__(prediction=predictions, truth=labels))
+        if tf.executing_eagerly:
+            self.__get_iou__(predictions, labels)
+            return None, None
+        else:
+            loss_summary = tf.summary.scalar('Loss', loss)
+            iou_summary = tf.summary.scalar('IOU', self.__get_iou__(prediction=predictions, truth=labels))
 
         return loss_summary, iou_summary
 
@@ -47,11 +55,14 @@ class SummaryBuilder:
 
     def __get_iou__(self, prediction, truth):
         truth, prediction = mask_out_void(truth, prediction)
-        prediction = tf.cast(tf.greater(prediction, 0.0, name='ClassPrediction-1'), tf.int32, name='ClassPrediction-2')
+        truth = tf.greater(truth, 0, name='RoadTruths')
+        prediction = tf.greater(prediction, 0.0, name='RoadPredictions')
 
-        true_positive = tf.cast(tf.reduce_sum(tf.multiply(prediction, truth), name='TruePositive'), dtype=tf.float64)
-        false_results = tf.cast(tf.subtract(prediction, truth, name='FalseResults'), dtype=tf.float64)
-        false_positive_plus_negative = tf.cast(tf.reduce_sum(tf.abs(false_results), name='CountFalse'), dtype=tf.float64)
+        wrong_prediction = tf.cast(tf.logical_xor(prediction, truth, name='WrongPrediction'), dtype=tf.float64)
+        correct_prediction = tf.cast(tf.logical_and(prediction, truth, name='CorrectPredictions'), dtype=tf.float64)
+
+        true_positive = tf.reduce_sum(correct_prediction)
+        false_positive_plus_negative = tf.reduce_sum(wrong_prediction)
 
         iou = tf.div(true_positive, tf.add(true_positive, false_positive_plus_negative), name='IOU')
 
@@ -86,5 +97,4 @@ summary = SummaryBuilder('Test')
 
 summary.build_summary(None, test_truth, test)
 """
-
 
