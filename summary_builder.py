@@ -3,6 +3,7 @@ import shutil
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
+from model import mask_out_void
 
 
 class SummaryBuilder:
@@ -28,8 +29,9 @@ class SummaryBuilder:
 
     def build_summary(self, loss, labels, predictions):
         loss_summary = tf.summary.scalar('Loss', loss)
+        iou_summary = tf.summary.scalar('IOU', self.__get_iou__(prediction=predictions, truth=labels))
 
-        return loss_summary
+        return loss_summary, iou_summary
 
     def __make_image__(self, in_image):
         newimage = np.zeros(shape=(in_image.shape[0], in_image.shape[1], 3),
@@ -42,6 +44,18 @@ class SummaryBuilder:
         newimage[np.logical_not(road_pixels)] = [255, 0, 0]  # not road pixels colored
 
         return newimage
+
+    def __get_iou__(self, prediction, truth):
+        truth, prediction = mask_out_void(truth, prediction)
+        prediction = tf.cast(tf.greater(prediction, 0.0, name='ClassPrediction-1'), tf.int32, name='ClassPrediction-2')
+
+        true_positive = tf.cast(tf.reduce_sum(tf.multiply(prediction, truth), name='TruePositive'), dtype=tf.float64)
+        false_results = tf.cast(tf.subtract(prediction, truth, name='FalseResults'), dtype=tf.float64)
+        false_positive_plus_negative = tf.cast(tf.reduce_sum(tf.abs(false_results), name='CountFalse'), dtype=tf.float64)
+
+        iou = tf.div(true_positive, tf.add(true_positive, false_positive_plus_negative), name='IOU')
+
+        return iou
 
     def save_ouput(self, segmented_images, image_names, prefix, show=False):
         segmented_images = segmented_images[0]
@@ -64,7 +78,13 @@ class SummaryBuilder:
 # TEST ONLY
 ###################
 """
-test = [np.array([[[[1], [-1]], [[-1], [1]]]])]
+test = np.array([[[[3], [3], [-3]], [[-1], [-3], [3]]]])
+test_truth = np.array([[[[1], [0], [0]], [[-1], [1], [1]]]])
+
+tf.enable_eager_execution()
 summary = SummaryBuilder('Test')
-summary.save_ouput(test, 'blah', '2', show=False)
+
+summary.build_summary(None, test_truth, test)
 """
+
+

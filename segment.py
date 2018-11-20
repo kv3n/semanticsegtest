@@ -30,7 +30,7 @@ true_segmentation = tf.placeholder(name='TrueSegmentation', dtype=tf.int32,
 output, optimize, loss = build_model(image_batch=batch_data, true_segmentation=true_segmentation)
 
 summary_builder = SummaryBuilder(log_name)
-loss_summary = summary_builder.build_summary(loss=loss, labels=true_segmentation, predictions=output)
+loss_summary, iou_summary = summary_builder.build_summary(loss=loss, labels=true_segmentation, predictions=output)
 
 with tf.Session() as sess:
     summary_builder.training.add_graph(graph=sess.graph)
@@ -49,10 +49,12 @@ with tf.Session() as sess:
 
             print(train_data.shape)
 
-            _, output_results, loss_val = sess.run([optimize, output, loss_summary], feed_dict={batch_data: train_data,
-                                                                                                true_segmentation: train_true_segmentation})
+            _, output_results, loss_val, iou_val = sess.run([optimize, output, loss_summary, iou_summary],
+                                                            feed_dict={batch_data: train_data,
+                                                                       true_segmentation: train_true_segmentation})
 
             summary_builder.training.add_summary(loss_val, global_step=data_feed.global_step)
+            summary_builder.training.add_summary(iou_val, global_step=data_feed.global_step)
 
             run_validation, run_test, end_of_epochs = data_feed.step_train()
             print('Ran Batch' + str(data_feed.global_step))

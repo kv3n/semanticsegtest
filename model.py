@@ -41,7 +41,7 @@ def _create_pooling_layer_(name, inputs, size=2, stride=2, padding='same'):
                                    padding=padding)
 
 
-def _get_loss_(prediction, truth):
+def mask_out_void(truth, prediction):
     non_void_pixels = tf.greater_equal(x=truth, y=0, name='NonVoidPixels')
 
     ignore_void_mask = tf.where(condition=non_void_pixels, name='NonVoidMask')
@@ -51,8 +51,15 @@ def _get_loss_(prediction, truth):
     non_void_prediction = tf.gather_nd(params=prediction, indices=ignore_void_mask,
                                        name='NonVoidPrediction')
 
-    loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.cast(non_void_truth, tf.float64), logits=non_void_prediction)
-    return tf.reduce_mean(loss)
+    return non_void_truth, non_void_prediction
+
+
+def _get_loss_(prediction, truth):
+    non_void_truth, non_void_prediction = mask_out_void(truth, prediction)
+
+    loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=non_void_truth, logits=non_void_prediction)
+
+    return loss
 
 
 def build_model(image_batch, true_segmentation):
