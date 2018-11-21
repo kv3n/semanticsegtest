@@ -16,6 +16,7 @@ def _create_conv_layer_(name, inputs, filters, size=5, stride=1, padding='same')
                             activation=tf.nn.relu,
                             padding=padding,
                             name=layer_name,
+                            use_bias=True,
                             bias_initializer=tf.contrib.layers.xavier_initializer(
                                 seed=seed_gen.seed_distributor.register_seed()),
                             kernel_initializer=tf.contrib.layers.xavier_initializer(
