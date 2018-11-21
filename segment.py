@@ -3,9 +3,9 @@ import time
 import matplotlib
 matplotlib.use('agg')
 from data_feed import *
-from model import *
+
 from summary_builder import *
-from seed_distributor import *
+from seed_gen import *
 
 parser = argparse.ArgumentParser(description='Tensorflow Log Name')
 parser.add_argument('logname', type=str, nargs='?', help='name of logfile', default='--t')
@@ -16,8 +16,7 @@ log_name = args.logname
 if log_name == '--t':
     log_name = str(time.time())
 
-seed = args.seed
-seed_distributor = SeedDistributor(random_seed=seed)
+make_seed_distributor(seed=args.seed)
 print('Using Seed: ' + str(seed_distributor.random_seed))
 
 data_feed = Data()

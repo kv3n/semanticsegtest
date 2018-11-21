@@ -19,3 +19,11 @@ class SeedDistributor:
         self.__active_seed__ += 1
 
         return self.__active_seed__
+
+
+seed_distributor = None
+
+
+def make_seed_distributor(seed):
+    global seed_distributor
+    seed_distributor = SeedDistributor(random_seed=seed)

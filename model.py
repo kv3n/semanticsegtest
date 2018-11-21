@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-from segment import seed_distributor
+from seed_gen import *
 
 LEARNING_RATE = 0.001
 MOMENTUM = 0.99
