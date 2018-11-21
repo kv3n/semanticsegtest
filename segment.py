@@ -1,3 +1,11 @@
+"""
+import tensorflow as tf
+###################################
+# TESTING ONLY ####################
+###################################
+tf.enable_eager_execution()
+"""
+
 import argparse
 import time
 import matplotlib
@@ -21,12 +29,15 @@ print('Using Seed: ' + str(seed_gen.seed_distributor.random_seed))
 
 data_feed = Data()
 
-batch_data = tf.placeholder(name='BatchData', dtype=tf.float64,
-                            shape=[None, data_feed.image_height, data_feed.image_width, data_feed.image_depth])
-true_segmentation = tf.placeholder(name='TrueSegmentation', dtype=tf.int32,
-                                   shape=[None, data_feed.image_height, data_feed.image_width, 1])
+if tf.executing_eagerly():
+    batch_data, train_name, true_segmentation, train_gt = data_feed.get_batch_feed(data_type=1)
+else:
+    batch_data = tf.placeholder(name='BatchData', dtype=tf.float64,
+                                shape=[None, data_feed.image_height, data_feed.image_width, data_feed.image_depth])
+    true_segmentation = tf.placeholder(name='TrueSegmentation', dtype=tf.int32,
+                                       shape=[None, data_feed.image_height, data_feed.image_width, 1])
 
-output, optimize, loss = model.build_model(image_batch=batch_data, true_segmentation=true_segmentation)
+pre_output, output, optimize, loss = model.build_model(image_batch=batch_data, true_segmentation=true_segmentation)
 
 summary_builder = SummaryBuilder(log_name)
 loss_summary, iou_summary = summary_builder.build_summary(loss=loss, labels=true_segmentation, predictions=output)
@@ -77,9 +88,9 @@ with tf.Session() as sess:
 
             print(str(train_name[0]) + ': ' + str(train_data.shape))
 
-            _, output_results, loss_val, train_iou_val = sess.run([optimize, output, loss_summary, iou_summary],
-                                                                  feed_dict={batch_data: train_data,
-                                                                             true_segmentation: train_true_segmentation})
+            _, pre_output_results, output_results, loss_val, train_iou_val = sess.run([optimize, pre_output, output, loss_summary, iou_summary],
+                                                                                      feed_dict={batch_data: train_data,
+                                                                                                 true_segmentation: train_true_segmentation})
 
             summary_builder.training.add_summary(loss_val, global_step=data_feed.global_step)
             summary_builder.training.add_summary(train_iou_val, global_step=data_feed.global_step)
@@ -88,6 +99,8 @@ with tf.Session() as sess:
             print('Ran Batch: ' + str(data_feed.global_step))
             print('Max: ' + str(np.amax(output_results)))
             print('Min: ' + str(np.amin(output_results)))
+            print('MaxPre: ' + str(np.amax(pre_output_results)))
+            print('MinPre: ' + str(np.amin(pre_output_results)))
 
             print('------------------------------------------------------------------')
 

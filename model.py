@@ -16,8 +16,10 @@ def _create_conv_layer_(name, inputs, filters, size=5, stride=1, padding='same')
                             activation=tf.nn.relu,
                             padding=padding,
                             name=layer_name,
-                            bias_initializer=tf.contrib.layers.xavier_initializer(seed=seed_gen.seed_distributor.register_seed()),
-                            kernel_initializer=tf.contrib.layers.xavier_initializer(seed=seed_gen.seed_distributor.register_seed()))
+                            bias_initializer=tf.contrib.layers.xavier_initializer(
+                                seed=seed_gen.seed_distributor.register_seed()),
+                            kernel_initializer=tf.contrib.layers.xavier_initializer(
+                                seed=seed_gen.seed_distributor.register_seed()))
 
 
 def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same'):
@@ -29,8 +31,11 @@ def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same
                                       strides=[stride, stride],
                                       padding=padding,
                                       name=layer_name,
-                                      bias_initializer=tf.initializers.zeros(),
-                                      kernel_initializer=tf.initializers.zeros())
+                                      bias_initializer=tf.contrib.layers.xavier_initializer(
+                                          seed=seed_gen.seed_distributor.register_seed()),
+                                      kernel_initializer=tf.contrib.layers.xavier_initializer(
+                                          seed=seed_gen.seed_distributor.register_seed())
+                                      )
 
 
 def _create_pooling_layer_(name, inputs, size=2, stride=2, padding='same'):
@@ -103,7 +108,7 @@ def build_model(image_batch, true_segmentation):
     loss = _get_loss_(prediction=output, truth=true_segmentation)
     optimize = tf.train.MomentumOptimizer(learning_rate=LEARNING_RATE, momentum=MOMENTUM).minimize(loss=loss)
 
-    return output, optimize, loss
+    return image_batch, output, optimize, loss
 
 
 #################
