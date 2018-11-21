@@ -15,6 +15,9 @@ class SummaryBuilder:
         self.training = None
         self.validation = None
         self.test = None
+
+        self.training_summaries = None
+
         if not tf.executing_eagerly():
             self.training = tf.summary.FileWriter(logdir='logs/' + log_name + '_train/')
             self.validation = tf.summary.FileWriter(logdir='logs/' + log_name + '_val/')
@@ -95,6 +98,19 @@ class SummaryBuilder:
         plt.savefig(self.log_folder + prefix + sample_name + '.png', bbox_inches='tight', dpi='figure')
         plt.close()
 
+    def add_to_training_summary(self, new_summary):
+        if self.training_summaries is None:
+            self.training_summaries = new_summary
+        else:
+            self.training_summaries = tf.summary.merge([self.training_summaries, new_summary])
+
+
+summary_sheet = None
+
+
+def make_summary_sheet(log_name):
+    global summary_sheet
+    summary_sheet = SummaryBuilder(log_name=log_name)
 
 ###################
 # TEST ONLY

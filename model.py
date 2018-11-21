@@ -1,15 +1,19 @@
 import tensorflow as tf
 import numpy as np
 import seed_gen
+import summary_builder
 
 LEARNING_RATE = 0.001
 MOMENTUM = 0.99
 
 
-def _create_initializer_(seed):
-    kernel_init = tf.contrib.layers.xavier_initializer(seed=seed)
+def _create_initializer_(seed, name):
+    init = tf.contrib.layers.xavier_initializer(seed=seed)
 
-    return kernel_init
+    summary_builder.summary_sheet.add_to_training_summary(new_summary=tf.summary.histogram(name=name,
+                                                                                           values=init))
+    return init
+
 
 def _create_conv_layer_(name, inputs, filters, size=5, stride=1, padding='same'):
     layer_name = 'Conv' + str(name) + '-' + str(size) + 'x' + str(size) + 'x' + str(filters) + '-' + str(stride)
@@ -21,8 +25,11 @@ def _create_conv_layer_(name, inputs, filters, size=5, stride=1, padding='same')
                             activation=tf.nn.relu,
                             padding=padding,
                             name=layer_name,
-                            use_bias=False,
-                            kernel_initializer=_create_initializer_(seed=seed_gen.seed_distributor.register_seed()))
+                            use_bias=True,
+                            kernel_initializer=_create_initializer_(seed=seed_gen.seed_distributor.register_seed(),
+                                                                    name=name+'-kernel'),
+                            bias_initializer=_create_initializer_(seed=seed_gen.seed_distributor.register_seed(),
+                                                                  name=name+'-bias'))
 
 
 def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same'):
@@ -34,9 +41,13 @@ def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same
                                       strides=[stride, stride],
                                       padding=padding,
                                       name=layer_name,
-                                      use_bias=False,
+                                      use_bias=True,
                                       kernel_initializer=_create_initializer_(
-                                          seed=seed_gen.seed_distributor.register_seed()))
+                                          seed=seed_gen.seed_distributor.register_seed(),
+                                          name=name+'-kernel'),
+                                      bias_initializer=_create_initializer_(
+                                          seed=seed_gen.seed_distributor.register_seed(),
+                                          name=name+'-bias'))
 
 
 def _create_pooling_layer_(name, inputs, size=2, stride=2, padding='same'):
