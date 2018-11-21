@@ -73,9 +73,9 @@ with tf.Session() as sess:
     while not end_of_epochs:
         try:
             # Run mini-batch
-            train_data, _, train_true_segmentation, train_gt = data_feed.get_batch_feed(data_type=1)
+            train_data, train_name, train_true_segmentation, train_gt = data_feed.get_batch_feed(data_type=1)
 
-            print(train_data.shape)
+            print(str(train_name[0]) + ': ' + str(train_data.shape))
 
             _, output_results, loss_val, train_iou_val = sess.run([optimize, output, loss_summary, iou_summary],
                                                                   feed_dict={batch_data: train_data,
