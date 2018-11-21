@@ -70,6 +70,8 @@ def _get_loss_(prediction, truth):
 
 
 def build_model(image_batch, true_segmentation):
+    image_batch = tf.divide(image_batch, 255.0)
+
     # Block 1
     image_batch = _create_conv_layer_(name='1', inputs=image_batch, size=3, filters=64)
     image_batch = _create_conv_layer_(name='2', inputs=image_batch, size=3, filters=64)
