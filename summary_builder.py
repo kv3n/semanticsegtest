@@ -99,7 +99,9 @@ class SummaryBuilder:
         output_image = np.vstack([input_image, self.__gap__, segmented_image, self.__gap__, ground_truth_image])
 
         save_dpi = 100
-        plt.figure(figsize=(output_image.shape[0] / save_dpi, output_image[1] / save_dpi), dpi=save_dpi)
+        figsize = [output_image.shape[0], output_image.shape[1]] / save_dpi
+        print(figsize)
+        plt.figure(figsize=figsize, dpi=save_dpi)
         plt.imshow(output_image)
 
         plt.savefig(self.log_folder + prefix + sample_name + '.png', bbox_inches='tight', dpi='figure')
