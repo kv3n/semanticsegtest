@@ -1,11 +1,4 @@
 import tensorflow as tf
-"""
-###################################
-# TESTING ONLY ####################
-###################################
-tf.enable_eager_execution()
-"""
-
 import argparse
 import time
 import matplotlib
@@ -30,19 +23,21 @@ print('Using Seed: ' + str(seed_gen.seed_distributor.random_seed))
 data_feed = Data()
 summary_builder.make_summary_sheet(log_name=log_name)
 
-if tf.executing_eagerly():
-    batch_data, train_name, true_segmentation, train_gt = data_feed.get_batch_feed(data_type=1)
-else:
-    batch_data = tf.placeholder(name='BatchData', dtype=tf.float64,
-                                shape=[None, data_feed.image_height, data_feed.image_width, data_feed.image_depth])
-    true_segmentation = tf.placeholder(name='TrueSegmentation', dtype=tf.int32,
-                                       shape=[None, data_feed.image_height, data_feed.image_width, 1])
+
+batch_data = tf.placeholder(name='BatchData', dtype=tf.float64,
+                            shape=[None, data_feed.image_height, data_feed.image_width, data_feed.image_depth])
+true_segmentation = tf.placeholder(name='TrueSegmentation', dtype=tf.int32,
+                                   shape=[None, data_feed.image_height, data_feed.image_width, 1])
+batched_iou = tf.placeholder(name='BatchedIOU', dtype=tf.float64)
 
 output, optimize, loss = model.build_model(image_batch=batch_data, true_segmentation=true_segmentation)
 
 loss_summary, iou_summary, iou_calc = summary_builder.summary_sheet.build_summary(loss=loss,
                                                                                   labels=true_segmentation,
                                                                                   predictions=output)
+
+batched_iou_summary = tf.summary.scalar('MEAN_IOU', batched_iou)
+
 summary_builder.summary_sheet.add_to_training_summary(new_summary=loss_summary)
 summary_builder.summary_sheet.add_to_training_summary(new_summary=iou_summary)
 
@@ -72,7 +67,8 @@ def run_batched_testing(sess, data_type, prefix):
     mean_iou = mean_iou / size
     print('--------------------------------------------------')
 
-    return tf.Summary().value.add(tag='mean_iou', simple_value=mean_iou)
+    batched_iou_val = sess.run([batched_iou_summary], feed_dict={batched_iou: mean_iou})
+    return batched_iou_val
 
 
 with tf.Session() as sess:
