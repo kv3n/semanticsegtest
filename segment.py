@@ -97,7 +97,7 @@ with tf.Session() as sess:
 
             if run_test:
                 test_iou_summary = run_batched_testing(sess=sess, data_type=3, prefix='test')
-                summary_builder.test.add_summary(test_iou_summary, data_feed.validation_step)
+                summary_builder.test.add_summary(test_iou_summary, data_feed.test_step)
 
                 print("Ran Test: " + str(data_feed.test_step))
 
