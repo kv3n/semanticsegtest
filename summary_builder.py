@@ -8,6 +8,8 @@ from model import mask_out_void
 
 class SummaryBuilder:
     def __init__(self, log_name):
+        self.__gap__ = 255 * np.ones([10, 1216, 3], dtype='uint8')
+
         self.log_folder = self.__make_log_folder__(log_name)
 
         self.training = None
@@ -68,21 +70,30 @@ class SummaryBuilder:
 
         return iou
 
-    def save_ouput(self, segmented_images, image_names, prefix, show=False):
-        segmented_images = segmented_images[0]
-        num_tests = len(segmented_images)
+    def save_ouput(self, batch_data, ground_truths, segmented_images, image_names, prefix):
+        prefix += '/'
 
-        for id in range(num_tests):
-            newimage = self.__make_image__(segmented_images[id])
+        input_image = batch_data[0].astype('uint8')
+        ground_truth_image = ground_truths[0]
 
-            print('Save: ' + image_names[id] + ': (' + str(newimage.shape) + ')')
-            plt.figure()
-            plt.imshow(newimage)
-            if show:
-                plt.show()
+        segmented_image = segmented_images[0][0]  # Assumption that we only get one image
+        sample_name = image_names[0]
 
-            plt.savefig(self.log_folder + prefix + '_' + image_names[id] + '.png')
-            plt.close()
+        if not os.path.exists(self.log_folder + prefix):
+            os.mkdir(self.log_folder + prefix)
+
+        segmented_image = self.__make_image__(segmented_image)
+        print('Save: ' + sample_name + ': (' + str(segmented_image.shape) + ')')
+
+        # Stack images in order input image, segmented image and ground truth
+        output_image = np.vstack([input_image, self.__gap__, segmented_image, self.__gap__, ground_truth_image])
+
+        save_dpi = 100
+        plt.figure(figsize=(output_image.shape[0] / save_dpi, output_image[1] / save_dpi), dpi=save_dpi)
+        plt.imshow(output_image)
+
+        plt.savefig(self.log_folder + prefix + sample_name + '.png', bbox_inches='tight', dpi='figure')
+        plt.close()
 
 
 ###################

@@ -19,12 +19,14 @@ TEST_INTERVAL = int(NUM_BATCHES_PER_EPOCH // TESTS_PER_EPOCH)
 
 
 class Feed:
-    def __init__(self, data, label, names, batch):
+    def __init__(self, data, label, names, ground_truth, batch):
         self.data = data
         self.label = label
         self.names = names
         self.batch = batch
+        self.ground_truth = ground_truth
         self.feed_size = len(self.data)
+        self.current_feed_index = 0
 
     def get_next_batch(self):
         if self.batch:
@@ -34,9 +36,14 @@ class Feed:
                 start_index = 0
             end_index = start_index + 1
         else:
-            start_index = 0
-            end_index = self.feed_size
-        return self.data[start_index:end_index], self.names[start_index:end_index], self.label[start_index:end_index]
+            if self.current_feed_index == self.feed_size:
+                self.current_feed_index = 0
+                return None, None, None, None
+
+            start_index = self.current_feed_index
+            end_index = self.current_feed_index = self.current_feed_index + 1
+
+        return self.data[start_index:end_index], self.names[start_index:end_index], self.label[start_index:end_index], self.ground_truth[start_index:end_index]
 
 
 class Data:
@@ -49,7 +56,6 @@ class Data:
 
         def loadimg(file):
             img = cv2.imread('data/' + file + '.png')
-            #img = mpimg.imread('data/' + file + '.png')
             return img
 
         def load_files_from_dir(dir_name):
@@ -100,7 +106,7 @@ class Data:
                                                           gt=train_gt,
                                                           start=train_end,
                                                           end=val_end,
-                                                          batch=True)
+                                                          batch=False)
 
         self.test_iterator = self.__make_iterator__(data=test_data,
                                                     names=test_names,
@@ -108,15 +114,15 @@ class Data:
                                                     gt=test_gt,
                                                     start=0,
                                                     end=test_end,
-                                                    batch=True)
+                                                    batch=False)
 
     def __make_iterator__(self, data, names, label, gt, start, end, batch=False):
         data = np.array(data)[start:end].astype('float64')
         names = names[start:end]
         label = np.array(label)[start:end].astype('int32')
-        gt = np.array(gt)[start:end].astype('int32')
+        gt = np.array(gt)[start:end].astype('uint8')
 
-        return Feed(data=data, label=label, names=names, batch=batch)
+        return Feed(data=data, label=label, names=names, ground_truth=gt, batch=batch)
 
     def __get_iterator__(self, data_type):
         if data_type == 1:
@@ -127,8 +133,8 @@ class Data:
             return self.test_iterator
 
     def get_batch_feed(self, data_type):
-        data, names, labels = self.__get_iterator__(data_type).get_next_batch()
-        return data, names, labels
+        data, names, labels, ground_truth = self.__get_iterator__(data_type).get_next_batch()
+        return data, names, labels, ground_truth
 
     def step_train(self):
         self.global_step += 1
