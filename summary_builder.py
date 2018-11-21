@@ -91,7 +91,7 @@ class SummaryBuilder:
         if not os.path.exists(self.log_folder + prefix):
             os.mkdir(self.log_folder + prefix)
 
-        print('Make Image with: ' + segmented_image.shape)
+        print('Make Image with: ' + str(segmented_image.shape))
         segmented_image = self.__make_image__(segmented_image)
         print('Save: ' + sample_name + ': (' + str(segmented_image.shape) + ')')
 
