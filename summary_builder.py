@@ -85,7 +85,7 @@ class SummaryBuilder:
         input_image = batch_data[0].astype('uint8')
         ground_truth_image = ground_truths[0]
 
-        segmented_image = segmented_images[0][0]  # Assumption that we only get one image
+        segmented_image = segmented_images[0]  # Assumption that we only get one image
         sample_name = image_names[0]
 
         if not os.path.exists(self.log_folder + prefix):
