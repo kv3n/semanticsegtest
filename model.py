@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-from seed_gen import *
+import seed_gen
 
 LEARNING_RATE = 0.001
 MOMENTUM = 0.99
@@ -16,8 +16,8 @@ def _create_conv_layer_(name, inputs, filters, size=5, stride=1, padding='same')
                             activation=tf.nn.relu,
                             padding=padding,
                             name=layer_name,
-                            bias_initializer=tf.contrib.layers.xavier_initializer(seed=seed_distributor.register_seed()),
-                            kernel_initializer=tf.contrib.layers.xavier_initializer(seed=seed_distributor.register_seed()))
+                            bias_initializer=tf.contrib.layers.xavier_initializer(seed=seed_gen.seed_distributor.register_seed()),
+                            kernel_initializer=tf.contrib.layers.xavier_initializer(seed=seed_gen.seed_distributor.register_seed()))
 
 
 def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same'):
@@ -29,8 +29,8 @@ def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same
                                       strides=[stride, stride],
                                       padding=padding,
                                       name=layer_name,
-                                      bias_initializer=tf.contrib.layers.xavier_initializer(seed=seed_distributor.register_seed()),
-                                      kernel_initializer=tf.contrib.layers.xavier_initializer(seed=seed_distributor.register_seed()))
+                                      bias_initializer=tf.contrib.layers.xavier_initializer(seed=seed_gen.seed_distributor.register_seed()),
+                                      kernel_initializer=tf.contrib.layers.xavier_initializer(seed=seed_gen.seed_distributor.register_seed()))
 
 
 def _create_pooling_layer_(name, inputs, size=2, stride=2, padding='same'):

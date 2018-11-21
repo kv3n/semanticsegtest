@@ -3,7 +3,7 @@ import shutil
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-from model import *
+import model
 
 
 class SummaryBuilder:
@@ -15,7 +15,7 @@ class SummaryBuilder:
         self.training = None
         self.validation = None
         self.test = None
-        if not tf.executing_eagerly:
+        if not tf.executing_eagerly():
             self.training = tf.summary.FileWriter(logdir='logs/' + log_name + '_train/')
             self.validation = tf.summary.FileWriter(logdir='logs/' + log_name + '_val/')
             self.test = tf.summary.FileWriter(logdir='logs/' + log_name + '_test/')
@@ -34,7 +34,7 @@ class SummaryBuilder:
         return log_folder
 
     def build_summary(self, loss, labels, predictions):
-        if tf.executing_eagerly:
+        if tf.executing_eagerly():
             self.__get_iou__(predictions, labels)
             return None, None
         else:
@@ -56,7 +56,7 @@ class SummaryBuilder:
         return newimage
 
     def __get_iou__(self, prediction, truth):
-        truth, prediction = mask_out_void(truth, prediction)
+        truth, prediction = model.mask_out_void(truth, prediction)
         truth = tf.greater(truth, 0, name='RoadTruths')
         prediction = tf.greater(prediction, 0.0, name='RoadPredictions')
 

@@ -3,9 +3,9 @@ import time
 import matplotlib
 matplotlib.use('agg')
 from data_feed import *
-
+import model
 from summary_builder import *
-from seed_gen import *
+import seed_gen
 
 parser = argparse.ArgumentParser(description='Tensorflow Log Name')
 parser.add_argument('logname', type=str, nargs='?', help='name of logfile', default='--t')
@@ -16,8 +16,8 @@ log_name = args.logname
 if log_name == '--t':
     log_name = str(time.time())
 
-make_seed_distributor(seed=args.seed)
-print('Using Seed: ' + str(seed_distributor.random_seed))
+seed_gen.make_seed_distributor(seed=args.seed)
+print('Using Seed: ' + str(seed_gen.seed_distributor.random_seed))
 
 data_feed = Data()
 
@@ -26,7 +26,7 @@ batch_data = tf.placeholder(name='BatchData', dtype=tf.float64,
 true_segmentation = tf.placeholder(name='TrueSegmentation', dtype=tf.int32,
                                    shape=[None, data_feed.image_height, data_feed.image_width, 1])
 
-output, optimize, loss = build_model(image_batch=batch_data, true_segmentation=true_segmentation)
+output, optimize, loss = model.build_model(image_batch=batch_data, true_segmentation=true_segmentation)
 
 summary_builder = SummaryBuilder(log_name)
 loss_summary, iou_summary = summary_builder.build_summary(loss=loss, labels=true_segmentation, predictions=output)
