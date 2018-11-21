@@ -37,7 +37,7 @@ else:
     true_segmentation = tf.placeholder(name='TrueSegmentation', dtype=tf.int32,
                                        shape=[None, data_feed.image_height, data_feed.image_width, 1])
 
-pre_output, output, optimize, loss = model.build_model(image_batch=batch_data, true_segmentation=true_segmentation)
+output, optimize, loss = model.build_model(image_batch=batch_data, true_segmentation=true_segmentation)
 
 summary_builder = SummaryBuilder(log_name)
 loss_summary, iou_summary = summary_builder.build_summary(loss=loss, labels=true_segmentation, predictions=output)
