@@ -49,10 +49,13 @@ def run_batched_testing(sess, data_type, prefix):
                                    image_names=names,
                                    prefix=prefix + str(data_feed.validation_step))
 
+        print(prefix + '(' + str(size+1) + ') -> ' + str(iou_val))
+
         mean_iou += iou_val
         size += 1
 
     mean_iou = mean_iou / size
+    print('--------------------------------------------------')
 
     return tf.Summary().value.add(tag='mean_iou', simple_value=mean_iou)
 
