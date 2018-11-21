@@ -49,12 +49,12 @@ def run_batched_testing(sess, data_type, prefix):
     mean_iou = 0.0
     size = 0
     while True:
-        data, names, true_segmentation, gt = data_feed.get_batch_feed(data_type=data_type)
+        data, names, label, gt = data_feed.get_batch_feed(data_type=data_type)
         if data is None:
             break
 
         output_val, iou_val = sess.run([output, iou_summary], feed_dict={batch_data: data,
-                                                                         true_segmentation: true_segmentation})
+                                                                         true_segmentation: label})
 
         summary_builder.summary_sheet.save_ouput(batch_data=data,
                                                  ground_truths=gt,
