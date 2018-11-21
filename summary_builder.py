@@ -48,7 +48,7 @@ class SummaryBuilder:
             trainables = tf.trainable_variables()
 
             for weight in trainables:
-                self.add_to_training_summary(new_summary=tf.summary.histogram(name=weight.name, values=weight.value))
+                self.add_to_training_summary(new_summary=tf.summary.histogram(name=weight.name, values=weight))
 
         return loss_summary, iou_summary
 
