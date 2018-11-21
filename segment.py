@@ -28,6 +28,7 @@ seed_gen.make_seed_distributor(seed=args.seed)
 print('Using Seed: ' + str(seed_gen.seed_distributor.random_seed))
 
 data_feed = Data()
+summary_builder.make_summary_sheet(log_name=log_name)
 
 if tf.executing_eagerly():
     batch_data, train_name, true_segmentation, train_gt = data_feed.get_batch_feed(data_type=1)
@@ -39,7 +40,6 @@ else:
 
 output, optimize, loss = model.build_model(image_batch=batch_data, true_segmentation=true_segmentation)
 
-summary_builder.make_summary_sheet(log_name=log_name)
 loss_summary, iou_summary = summary_builder.summary_sheet.build_summary(loss=loss, labels=true_segmentation, predictions=output)
 summary_builder.summary_sheet.add_to_training_summary(new_summary=loss_summary)
 summary_builder.summary_sheet.add_to_training_summary(new_summary=iou_summary)
