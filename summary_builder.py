@@ -52,18 +52,6 @@ class SummaryBuilder:
 
         return loss_summary, iou_summary
 
-    def __make_image__(self, in_image):
-        newimage = np.zeros(shape=(in_image.shape[0], in_image.shape[1], 3),
-                            dtype='uint8')
-
-        in_image = np.squeeze(in_image, axis=2)
-
-        road_pixels = in_image > 0.0
-        newimage[road_pixels] = [255, 0, 255]  # Road Pixels colored
-        newimage[np.logical_not(road_pixels)] = [255, 0, 0]  # not road pixels colored
-
-        return newimage
-
     def __get_iou__(self, prediction, truth):
         truth, prediction = model.mask_out_void(truth, prediction)
         truth = tf.greater(truth, 0, name='RoadTruths')
@@ -79,6 +67,18 @@ class SummaryBuilder:
 
         return iou
 
+    def __make_image__(self, in_image):
+        newimage = np.zeros(shape=(in_image.shape[0], in_image.shape[1], 3),
+                            dtype='uint8')
+
+        in_image = np.squeeze(in_image, axis=2)
+
+        road_pixels = in_image > 0.0
+        newimage[road_pixels] = [255, 0, 255]  # Road Pixels colored
+        newimage[np.logical_not(road_pixels)] = [255, 0, 0]  # not road pixels colored
+
+        return newimage
+
     def save_ouput(self, batch_data, ground_truths, segmented_images, image_names, prefix):
         prefix += '/'
 
@@ -91,6 +91,7 @@ class SummaryBuilder:
         if not os.path.exists(self.log_folder + prefix):
             os.mkdir(self.log_folder + prefix)
 
+        print('Make Image with: ' + segmented_image.shape)
         segmented_image = self.__make_image__(segmented_image)
         print('Save: ' + sample_name + ': (' + str(segmented_image.shape) + ')')
 
