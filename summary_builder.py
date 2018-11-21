@@ -44,6 +44,12 @@ class SummaryBuilder:
             loss_summary = tf.summary.scalar('Loss', loss)
             iou_summary = tf.summary.scalar('IOU', self.__get_iou__(prediction=predictions, truth=labels))
 
+            # Add weights to histogram
+            trainables = tf.trainable_variables()
+
+            for weight in trainables:
+                self.add_to_training_summary(new_summary=tf.summary.histogram(name=weight.name, values=weight.value))
+
         return loss_summary, iou_summary
 
     def __make_image__(self, in_image):

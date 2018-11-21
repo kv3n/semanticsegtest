@@ -7,11 +7,9 @@ LEARNING_RATE = 0.001
 MOMENTUM = 0.99
 
 
-def _create_initializer_(seed, name):
+def _create_initializer_(seed):
     init = tf.contrib.layers.xavier_initializer(seed=seed)
 
-    summary_builder.summary_sheet.add_to_training_summary(new_summary=tf.summary.histogram(name=name,
-                                                                                           values=init))
     return init
 
 
@@ -26,10 +24,8 @@ def _create_conv_layer_(name, inputs, filters, size=5, stride=1, padding='same')
                             padding=padding,
                             name=layer_name,
                             use_bias=True,
-                            kernel_initializer=_create_initializer_(seed=seed_gen.seed_distributor.register_seed(),
-                                                                    name=name+'-kernel'),
-                            bias_initializer=_create_initializer_(seed=seed_gen.seed_distributor.register_seed(),
-                                                                  name=name+'-bias'))
+                            kernel_initializer=_create_initializer_(seed=seed_gen.seed_distributor.register_seed()),
+                            bias_initializer=_create_initializer_(seed=seed_gen.seed_distributor.register_seed()))
 
 
 def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same'):
@@ -43,11 +39,9 @@ def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same
                                       name=layer_name,
                                       use_bias=True,
                                       kernel_initializer=_create_initializer_(
-                                          seed=seed_gen.seed_distributor.register_seed(),
-                                          name=name+'-kernel'),
+                                          seed=seed_gen.seed_distributor.register_seed()),
                                       bias_initializer=_create_initializer_(
-                                          seed=seed_gen.seed_distributor.register_seed(),
-                                          name=name+'-bias'))
+                                          seed=seed_gen.seed_distributor.register_seed()))
 
 
 def _create_pooling_layer_(name, inputs, size=2, stride=2, padding='same'):
