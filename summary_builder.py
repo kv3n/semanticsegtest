@@ -39,10 +39,11 @@ class SummaryBuilder:
     def build_summary(self, loss, labels, predictions):
         if tf.executing_eagerly():
             self.__get_iou__(predictions, labels)
-            return None, None
+            return None, None, None
         else:
             loss_summary = tf.summary.scalar('Loss', loss)
-            iou_summary = tf.summary.scalar('IOU', self.__get_iou__(prediction=predictions, truth=labels))
+            iou_calc = self.__get_iou__(prediction=predictions, truth=labels)
+            iou_summary = tf.summary.scalar('IOU', iou_calc)
 
             # Add weights to histogram
             trainables = tf.trainable_variables()
@@ -50,7 +51,7 @@ class SummaryBuilder:
             for weight in trainables:
                 self.add_to_training_summary(new_summary=tf.summary.histogram(name=weight.name, values=weight))
 
-        return loss_summary, iou_summary
+        return loss_summary, iou_summary, iou_calc
 
     def __get_iou__(self, prediction, truth):
         truth, prediction = model.mask_out_void(truth, prediction)

@@ -40,7 +40,9 @@ else:
 
 output, optimize, loss = model.build_model(image_batch=batch_data, true_segmentation=true_segmentation)
 
-loss_summary, iou_summary = summary_builder.summary_sheet.build_summary(loss=loss, labels=true_segmentation, predictions=output)
+loss_summary, iou_summary, iou_calc = summary_builder.summary_sheet.build_summary(loss=loss,
+                                                                                  labels=true_segmentation,
+                                                                                  predictions=output)
 summary_builder.summary_sheet.add_to_training_summary(new_summary=loss_summary)
 summary_builder.summary_sheet.add_to_training_summary(new_summary=iou_summary)
 
@@ -53,8 +55,8 @@ def run_batched_testing(sess, data_type, prefix):
         if data is None:
             break
 
-        output_val, iou_val = sess.run([output, iou_summary], feed_dict={batch_data: data,
-                                                                         true_segmentation: label})
+        output_val, iou_val = sess.run([output, iou_calc], feed_dict={batch_data: data,
+                                                                      true_segmentation: label})
 
         summary_builder.summary_sheet.save_ouput(batch_data=data,
                                                  ground_truths=gt,
