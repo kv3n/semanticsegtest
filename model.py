@@ -103,7 +103,6 @@ def build_model(image_batch, true_segmentation):
     # Replaced FC
     image_batch = _create_conv_layer_(name='FC1', inputs=image_batch, size=7, filters=4096)
     image_batch = _create_conv_layer_(name='FC2', inputs=image_batch, size=1, filters=4096)
-    plug = image_batch
     image_batch = _create_conv_layer_(name='FC3', inputs=image_batch, size=1, filters=1)
 
     # Deconvolution Layer
@@ -112,7 +111,7 @@ def build_model(image_batch, true_segmentation):
     loss = _get_loss_(prediction=output, truth=true_segmentation)
     optimize = tf.train.MomentumOptimizer(learning_rate=LEARNING_RATE, momentum=MOMENTUM).minimize(loss=loss)
 
-    return plug, output, optimize, loss
+    return output, optimize, loss
 
 
 #################

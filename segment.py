@@ -88,9 +88,9 @@ with tf.Session() as sess:
 
             print(str(train_name[0]) + ': ' + str(train_data.shape))
 
-            _, pre_output_results, output_results, loss_val, train_iou_val = sess.run([optimize, pre_output, output, loss_summary, iou_summary],
-                                                                                      feed_dict={batch_data: train_data,
-                                                                                                 true_segmentation: train_true_segmentation})
+            _, output_results, loss_val, train_iou_val = sess.run([optimize, output, loss_summary, iou_summary],
+                                                                  feed_dict={batch_data: train_data,
+                                                                             true_segmentation: train_true_segmentation})
 
             summary_builder.training.add_summary(loss_val, global_step=data_feed.global_step)
             summary_builder.training.add_summary(train_iou_val, global_step=data_feed.global_step)
@@ -99,8 +99,6 @@ with tf.Session() as sess:
             print('Ran Batch: ' + str(data_feed.global_step))
             print('Max: ' + str(np.amax(output_results)))
             print('Min: ' + str(np.amin(output_results)))
-            print('MaxPre: ' + str(np.amax(pre_output_results)))
-            print('MinPre: ' + str(np.amin(pre_output_results)))
 
             print('------------------------------------------------------------------')
 
