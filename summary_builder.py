@@ -100,7 +100,6 @@ class SummaryBuilder:
 
         save_dpi = 100
         figsize = [output_image.shape[0] / save_dpi, output_image.shape[1] / save_dpi]
-        print(figsize)
         plt.figure(figsize=figsize, dpi=save_dpi)
         plt.imshow(output_image)
 
