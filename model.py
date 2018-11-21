@@ -6,6 +6,11 @@ LEARNING_RATE = 0.001
 MOMENTUM = 0.99
 
 
+def _create_initializer_(seed):
+    kernel_init = tf.contrib.layers.xavier_initializer(seed=seed)
+
+    return kernel_init
+
 def _create_conv_layer_(name, inputs, filters, size=5, stride=1, padding='same'):
     layer_name = 'Conv' + str(name) + '-' + str(size) + 'x' + str(size) + 'x' + str(filters) + '-' + str(stride)
 
@@ -16,11 +21,8 @@ def _create_conv_layer_(name, inputs, filters, size=5, stride=1, padding='same')
                             activation=tf.nn.relu,
                             padding=padding,
                             name=layer_name,
-                            use_bias=True,
-                            bias_initializer=tf.contrib.layers.xavier_initializer(
-                                seed=seed_gen.seed_distributor.register_seed()),
-                            kernel_initializer=tf.contrib.layers.xavier_initializer(
-                                seed=seed_gen.seed_distributor.register_seed()))
+                            use_bias=False,
+                            kernel_initializer=_create_initializer_(seed=seed_gen.seed_distributor.register_seed()))
 
 
 def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same'):
@@ -33,11 +35,8 @@ def _create_deconv_layer_(name, inputs, filters, size=5, stride=1, padding='same
                                       padding=padding,
                                       name=layer_name,
                                       use_bias=False,
-                                      bias_initializer=tf.contrib.layers.xavier_initializer(
-                                          seed=seed_gen.seed_distributor.register_seed()),
-                                      kernel_initializer=tf.contrib.layers.xavier_initializer(
-                                          seed=seed_gen.seed_distributor.register_seed())
-                                      )
+                                      kernel_initializer=_create_initializer_(
+                                          seed=seed_gen.seed_distributor.register_seed()))
 
 
 def _create_pooling_layer_(name, inputs, size=2, stride=2, padding='same'):
