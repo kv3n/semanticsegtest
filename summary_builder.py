@@ -3,7 +3,7 @@ import shutil
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-from model import mask_out_void
+from model import *
 
 
 class SummaryBuilder:

@@ -18,7 +18,7 @@ if log_name == '--t':
 
 seed = args.seed
 seed_distributor = SeedDistributor(random_seed=seed)
-print('Using Seed: ' + seed_distributor.random_seed)
+print('Using Seed: ' + str(seed_distributor.random_seed))
 
 data_feed = Data()
 
