@@ -42,7 +42,7 @@ summary_builder.summary_sheet.add_to_training_summary(new_summary=loss_summary)
 summary_builder.summary_sheet.add_to_training_summary(new_summary=iou_summary)
 
 
-def run_batched_testing(sess, data_type, prefix):
+def run_batched_testing(tf_sess, data_type, prefix):
     mean_iou = 0.0
     size = 0
     while size < 1:
@@ -50,8 +50,8 @@ def run_batched_testing(sess, data_type, prefix):
         if data is None:
             break
 
-        output_val, iou_val = sess.run([output, iou_calc], feed_dict={batch_data: data,
-                                                                      true_segmentation: label})
+        output_val, iou_val = tf_sess.run([output, iou_calc], feed_dict={batch_data: data,
+                                                                         true_segmentation: label})
 
         summary_builder.summary_sheet.save_ouput(batch_data=data,
                                                  ground_truths=gt,
@@ -67,7 +67,7 @@ def run_batched_testing(sess, data_type, prefix):
     mean_iou = mean_iou / size
     print('--------------------------------------------------')
 
-    batched_iou_val = sess.run(batched_iou_summary, feed_dict={batched_iou: mean_iou})
+    batched_iou_val = tf_sess.run(batched_iou_summary, feed_dict={batched_iou: mean_iou})
     return batched_iou_val
 
 
@@ -102,13 +102,13 @@ with tf.Session() as sess:
             print('------------------------------------------------------------------')
 
             if run_validation:
-                val_iou_summary = run_batched_testing(sess=sess, data_type=2, prefix='val')
+                val_iou_summary = run_batched_testing(tf_sess=sess, data_type=2, prefix='val')
                 summary_builder.summary_sheet.validation.add_summary(val_iou_summary, data_feed.validation_step)
 
                 print("Ran Validation: " + str(data_feed.validation_step))
 
             if run_test:
-                test_iou_summary = run_batched_testing(sess=sess, data_type=3, prefix='test')
+                test_iou_summary = run_batched_testing(tf_sess=sess, data_type=3, prefix='test')
                 summary_builder.summary_sheet.test.add_summary(test_iou_summary, data_feed.test_step)
 
                 print("Ran Test: " + str(data_feed.test_step))
