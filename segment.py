@@ -36,7 +36,7 @@ loss_summary, iou_summary, iou_calc = summary_builder.summary_sheet.build_summar
                                                                                   labels=true_segmentation,
                                                                                   predictions=output)
 
-batched_iou_summary = tf.summary.scalar('MEAN_IOU', batched_iou)
+batched_iou_summary = tf.summary.scalar('MEAN_IOU', tensor=batched_iou)
 
 summary_builder.summary_sheet.add_to_training_summary(new_summary=loss_summary)
 summary_builder.summary_sheet.add_to_training_summary(new_summary=iou_summary)
@@ -45,7 +45,7 @@ summary_builder.summary_sheet.add_to_training_summary(new_summary=iou_summary)
 def run_batched_testing(sess, data_type, prefix):
     mean_iou = 0.0
     size = 0
-    while True:
+    while size < 1:
         data, names, label, gt = data_feed.get_batch_feed(data_type=data_type)
         if data is None:
             break
@@ -67,7 +67,7 @@ def run_batched_testing(sess, data_type, prefix):
     mean_iou = mean_iou / size
     print('--------------------------------------------------')
 
-    batched_iou_val = sess.run([batched_iou_summary], feed_dict={batched_iou: mean_iou})
+    batched_iou_val = sess.run(batched_iou_summary, feed_dict={batched_iou: mean_iou})
     return batched_iou_val
 
 

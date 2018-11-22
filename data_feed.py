@@ -9,7 +9,7 @@ TRAIN_SIZE = 199
 VAL_SIZE = 45
 TEST_SIZE = 45
 BATCH_SIZE = 1
-VALIDATIONS_PER_EPOCH = 10
+VALIDATIONS_PER_EPOCH = 198
 NUM_BATCHES_PER_EPOCH = TRAIN_SIZE // BATCH_SIZE
 TOTAL_BATCHES = NUM_BATCHES_PER_EPOCH * EPOCHS
 VALIDATION_INTERVAL = NUM_BATCHES_PER_EPOCH // VALIDATIONS_PER_EPOCH
@@ -145,45 +145,3 @@ class Data:
         end_test = (self.global_step % TOTAL_BATCHES == 0)
 
         return run_validation, run_test, end_test
-
-
-###################
-# TEST ONLY
-###################
-"""
-data = Data()
-
-data_type = tf.placeholder(name='DataType', dtype=tf.uint8)
-data = Data(data_type)
-input_layer, fine_label, coarse_label = data.get_batch_feed()
-
-with tf.Session() as data_sess:
-    data_sess.run(tf.global_variables_initializer())
-    print(data.mean_image.eval())
-
-    while True:
-        try:
-            d = data_sess.run([fine_label], feed_dict={data_type: 3})
-        except tf.errors.OutOfRangeError:
-            print('End of Epochs')
-            break
-"""
-
-##################
-# DEBUG HELPERS
-##################
-
-"""
-def debug_draw_batch(batch, size):
-    vstack = np.zeros([1, 32 * size + 1, 3], 'uint8')
-
-    for r in range(size):
-        hstack = np.zeros([32, 1, 3], 'uint8')
-        for c in range(size):
-            hstack = np.hstack((hstack, batch[0][r * size + c]))
-        vstack = np.vstack((vstack, hstack))
-
-    plt.figure()
-    plt.imshow(vstack)
-    plt.show()
-"""
