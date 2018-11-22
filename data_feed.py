@@ -55,6 +55,7 @@ class Data:
 
         def loadimg(file):
             img = cv2.imread('data/' + file + '.png')
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             return img
 
         def load_files_from_dir(dir_name):
