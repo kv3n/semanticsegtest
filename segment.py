@@ -45,7 +45,7 @@ summary_builder.summary_sheet.add_to_training_summary(new_summary=iou_summary)
 def run_batched_testing(tf_sess, data_type, prefix):
     mean_iou = 0.0
     size = 0
-    while size < 1:
+    while True:
         data, names, label, gt = data_feed.get_batch_feed(data_type=data_type)
         if data is None:
             break
@@ -57,7 +57,7 @@ def run_batched_testing(tf_sess, data_type, prefix):
                                                  ground_truths=gt,
                                                  segmented_images=output_val,
                                                  image_names=names,
-                                                 prefix=prefix + str(data_feed.validation_step))
+                                                 prefix=prefix)
 
         print(prefix + '(' + str(size+1) + ') -> %s' % iou_val)
 
@@ -102,13 +102,15 @@ with tf.Session() as sess:
             print('------------------------------------------------------------------')
 
             if run_validation:
-                val_iou_summary = run_batched_testing(tf_sess=sess, data_type=2, prefix='val')
+                val_iou_summary = run_batched_testing(tf_sess=sess, data_type=2,
+                                                      prefix='val'+str(int(data_feed.validation_step)))
                 summary_builder.summary_sheet.validation.add_summary(val_iou_summary, data_feed.validation_step)
 
                 print("Ran Validation: " + str(data_feed.validation_step))
 
             if run_test:
-                test_iou_summary = run_batched_testing(tf_sess=sess, data_type=3, prefix='test')
+                test_iou_summary = run_batched_testing(tf_sess=sess, data_type=3,
+                                                       prefix='test'+str(int(data_feed.test_step)))
                 summary_builder.summary_sheet.test.add_summary(test_iou_summary, data_feed.test_step)
 
                 print("Ran Test: " + str(data_feed.test_step))
