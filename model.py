@@ -13,14 +13,14 @@ def _create_initializer_(seed):
     return init
 
 
-def _create_conv_layer_(name, inputs, filters, size=5, stride=1, padding='same'):
+def _create_conv_layer_(name, inputs, filters, size=5, stride=1, padding='same', activation=tf.nn.relu):
     layer_name = 'Conv' + str(name) + '-' + str(size) + 'x' + str(size) + 'x' + str(filters) + '-' + str(stride)
 
     return tf.layers.conv2d(inputs=inputs,
                             filters=filters,
                             kernel_size=[size, size],
                             strides=[stride, stride],
-                            activation=tf.nn.relu,
+                            activation=activation,
                             padding=padding,
                             name=layer_name,
                             use_bias=True,
@@ -75,6 +75,9 @@ def _get_loss_(prediction, truth):
 
 
 def build_model(image_batch, true_segmentation):
+    # Block 0
+    image_batch = _create_conv_layer_(name='0', inputs=image_batch, size=1, filters=1, activation=None)
+
     # Block 1
     image_batch = _create_conv_layer_(name='1', inputs=image_batch, size=3, filters=64)
     image_batch = _create_conv_layer_(name='2', inputs=image_batch, size=3, filters=64)
