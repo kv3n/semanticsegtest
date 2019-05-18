@@ -42,10 +42,10 @@ def _create_deconv_layer_(name, filters, size=5, stride=1, padding='same'):
 
 def _create_pooling_layer_(name, size=2, stride=2, padding='same'):
     layer_name = 'Pool' + str(name) + '-' + str(size) + 'x' + str(size) + '-' + str(stride)
-    return tf.keras.layers.max_pooling2d(pool_size=size,
-                                         strides=stride,
-                                         padding=padding,
-                                         name=layer_name)
+    return tf.keras.layers.MaxPooling2D(pool_size=size,
+                                        strides=stride,
+                                        padding=padding,
+                                        name=layer_name)
 
 
 def mask_out_void(truth, prediction):
@@ -64,7 +64,7 @@ def mask_out_void(truth, prediction):
 def _get_loss_(truth, prediction):
     non_void_truth, non_void_prediction = mask_out_void(truth, prediction)
 
-    loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=non_void_truth, logits=non_void_prediction)
+    loss = tf.reduce_mean(tf.square(tf.sigmoid(non_void_prediction) - non_void_truth))
 
     return loss
 
@@ -114,7 +114,7 @@ def build_model(input_shape):
     keras_model.compile(optimizer='adam',
                         loss=_get_loss_,
                         metrics=['accuracy'])
-    keras_model.metrics += [output]
+    #keras_model.metrics += [output]
 
     keras_model.summary()
 

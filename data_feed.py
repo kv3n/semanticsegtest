@@ -87,6 +87,7 @@ class Data:
         self.image_height = train_data[0].shape[0]
         self.image_width = train_data[0].shape[1]
         self.image_depth = train_data[0].shape[2]
+        self.data_shape = (self.image_height, self.image_width, self.image_depth)
 
         train_end = TRAIN_SIZE
         val_end = train_end + VAL_SIZE
