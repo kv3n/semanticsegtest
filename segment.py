@@ -3,8 +3,8 @@ import argparse
 import time
 import matplotlib
 matplotlib.use('agg')
-from data_feed import *
-import model
+from data_feed import Data
+from model import build_model
 import summary_builder
 
 parser = argparse.ArgumentParser(description='Tensorflow Log Name')
@@ -18,15 +18,9 @@ if log_name == '--t':
 data_feed = Data()
 summary_builder.make_summary_sheet(log_name=log_name)
 
+keras_model = build_model(input_shape=data_feed.data_shape)
 
-batch_data = tf.placeholder(name='BatchData', dtype=tf.float64,
-                            shape=[None, data_feed.image_height, data_feed.image_width, data_feed.image_depth])
-true_segmentation = tf.placeholder(name='TrueSegmentation', dtype=tf.int32,
-                                   shape=[None, data_feed.image_height, data_feed.image_width, 1])
-batched_iou = tf.placeholder(name='BatchedIOU', dtype=tf.float64)
-
-output, optimize, loss = model.build_model(image_batch=batch_data, true_segmentation=true_segmentation)
-
+"""
 loss_summary, iou_summary, iou_calc = summary_builder.summary_sheet.build_summary(loss=loss,
                                                                                   labels=true_segmentation,
                                                                                   predictions=output)
@@ -35,9 +29,10 @@ batched_iou_summary = tf.summary.scalar('MEAN_IOU', tensor=batched_iou)
 
 summary_builder.summary_sheet.add_to_training_summary(new_summary=loss_summary)
 summary_builder.summary_sheet.add_to_training_summary(new_summary=iou_summary)
+"""
 
 
-def run_batched_testing(tf_sess, data_type, prefix):
+def run_batched_testing(data_type, prefix):
     mean_iou = 0.0
     size = 0
     while True:
@@ -45,15 +40,15 @@ def run_batched_testing(tf_sess, data_type, prefix):
         if data is None:
             break
 
-        output_val, iou_val = tf_sess.run([output, iou_calc], feed_dict={batch_data: data,
-                                                                         true_segmentation: label})
+        results = keras_model.test_on_batch(data, label)
 
         summary_builder.summary_sheet.save_ouput(batch_data=data,
                                                  ground_truths=gt,
-                                                 segmented_images=output_val,
+                                                 segmented_images=results[2],
                                                  image_names=names,
                                                  prefix=prefix)
 
+        iou_val = results[1]
         print(prefix + '(' + str(size+1) + ') -> %s' % iou_val)
 
         mean_iou += iou_val
@@ -62,51 +57,38 @@ def run_batched_testing(tf_sess, data_type, prefix):
     mean_iou = mean_iou / size
     print('--------------------------------------------------')
 
-    batched_iou_val = tf_sess.run(batched_iou_summary, feed_dict={batched_iou: mean_iou})
-    return batched_iou_val
+    return mean_iou  # This should be part of the summary
 
 
-with tf.Session() as sess:
-    summary_builder.summary_sheet.training.add_graph(graph=sess.graph)
+# summary_builder.summary_sheet.training.add_graph(graph=sess.graph)
 
-    sess.run(tf.global_variables_initializer())
+global_batch_count = 0
+half_epoch_count = 0
+test_epoch_count = 0
 
-    global_batch_count = 0
-    half_epoch_count = 0
-    test_epoch_count = 0
+end_of_epochs = False
+while not end_of_epochs:
+    # Run mini-batch
+    train_data, train_name, train_true_segmentation, train_gt = data_feed.get_batch_feed(data_type=1)
 
-    end_of_epochs = False
-    while not end_of_epochs:
-        try:
-            # Run mini-batch
-            train_data, train_name, train_true_segmentation, train_gt = data_feed.get_batch_feed(data_type=1)
+    print('Training on {}: {}'.format(train_name[0], train_data.shape))
 
-            print(str(train_name[0]) + ': ' + str(train_data.shape))
+    results = keras_model.train_on_batch(train_data, train_true_segmentation)
 
-            _, output_results, summaries = sess.run([optimize, output, summary_builder.summary_sheet.training_summaries],
-                                                    feed_dict={batch_data: train_data,
-                                                               true_segmentation: train_true_segmentation})
+    # summary_builder.summary_sheet.training.add_summary(summaries, global_step=data_feed.global_step)
 
-            summary_builder.summary_sheet.training.add_summary(summaries, global_step=data_feed.global_step)
+    run_validation, run_test, end_of_epochs = data_feed.step_train()
+    print('Ran Batch: ' + str(data_feed.global_step))
+    print('------------------------------------------------------------------')
 
-            run_validation, run_test, end_of_epochs = data_feed.step_train()
-            print('Ran Batch: ' + str(data_feed.global_step))
-            print('------------------------------------------------------------------')
+    if run_validation:
+        val_iou_val = run_batched_testing(data_type=2, prefix='test'+str(int(data_feed.test_step)))
+        # summary_builder.summary_sheet.validation.add_summary(val_iou_summary, data_feed.validation_step)
 
-            if run_validation:
-                val_iou_summary = run_batched_testing(tf_sess=sess, data_type=2,
-                                                      prefix='val'+str(int(data_feed.validation_step)))
-                summary_builder.summary_sheet.validation.add_summary(val_iou_summary, data_feed.validation_step)
+        print('Ran Validation: {} with {} mean acc'.format(data_feed.validation_step, val_iou_val))
 
-                print("Ran Validation: " + str(data_feed.validation_step))
+    if run_test:
+        test_iou_val = run_batched_testing(data_type=3, prefix='test'+str(int(data_feed.test_step)))
+        # summary_builder.summary_sheet.test.add_summary(test_iou_summary, data_feed.test_step)
 
-            if run_test:
-                test_iou_summary = run_batched_testing(tf_sess=sess, data_type=3,
-                                                       prefix='test'+str(int(data_feed.test_step)))
-                summary_builder.summary_sheet.test.add_summary(test_iou_summary, data_feed.test_step)
-
-                print("Ran Test: " + str(data_feed.test_step))
-
-        except tf.errors.OutOfRangeError:
-            print('End of Epochs')
-            break
+        print('Ran Test: {} with {} mean acc'.format(data_feed.test_step, test_iou_val))
