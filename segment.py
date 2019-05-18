@@ -2,9 +2,9 @@ import tensorflow as tf
 import argparse
 import time
 import matplotlib
-matplotlib.use('agg')
+# matplotlib.use('agg')
 from data_feed import Data
-from model import build_model
+from model import build_model, build_output_functor
 import summary_builder
 
 parser = argparse.ArgumentParser(description='Tensorflow Log Name')
@@ -19,6 +19,7 @@ data_feed = Data()
 summary_builder.make_summary_sheet(log_name=log_name)
 
 keras_model = build_model(input_shape=data_feed.data_shape)
+keras_output = build_output_functor(keras_model)
 
 """
 loss_summary, iou_summary, iou_calc = summary_builder.summary_sheet.build_summary(loss=loss,
@@ -41,10 +42,11 @@ def run_batched_testing(data_type, prefix):
             break
 
         results = keras_model.test_on_batch(data, label)
+        output = keras_output(data)[0]
 
         summary_builder.summary_sheet.save_ouput(batch_data=data,
                                                  ground_truths=gt,
-                                                 segmented_images=results[2],
+                                                 segmented_images=output,
                                                  image_names=names,
                                                  prefix=prefix)
 
@@ -75,6 +77,12 @@ while not end_of_epochs:
 
     results = keras_model.train_on_batch(train_data, train_true_segmentation)
 
+    """
+    summary_builder.summary_sheet.show_output(batch_data=train_data,
+                                              ground_truths=train_gt,
+                                              segmented_images=output,
+                                              image_names=train_name)
+    """
     # summary_builder.summary_sheet.training.add_summary(summaries, global_step=data_feed.global_step)
 
     run_validation, run_test, end_of_epochs = data_feed.step_train()

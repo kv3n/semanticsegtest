@@ -80,6 +80,22 @@ class SummaryBuilder:
 
         return newimage
 
+    def show_output(self, batch_data, ground_truths, segmented_images, image_names):
+        input_image = batch_data[0].astype('uint8')
+        ground_truth_image = ground_truths[0]
+
+        segmented_image = segmented_images[0]  # Assumption that we only get one image
+
+        segmented_image = self.__make_image__(segmented_image)
+
+        # Stack images in order input image, segmented image and ground truth
+        output_image = np.vstack([input_image, self.__gap__, segmented_image, self.__gap__, ground_truth_image])
+
+        plt.figure()
+        plt.imshow(output_image)
+
+        plt.show()
+
     def save_ouput(self, batch_data, ground_truths, segmented_images, image_names, prefix):
         prefix += '/'
 

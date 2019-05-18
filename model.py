@@ -121,6 +121,12 @@ def build_model(input_shape):
     return keras_model
 
 
+def build_output_functor(model):
+    # with a Sequential model
+    get_output = tf.keras.backend.function([model.layers[0].input],
+                                           [model.layers[-1].output])
+    return get_output
+
 #################
 # TESTING
 #################
