@@ -6,19 +6,14 @@ matplotlib.use('agg')
 from data_feed import *
 import model
 import summary_builder
-import seed_gen
 
 parser = argparse.ArgumentParser(description='Tensorflow Log Name')
 parser.add_argument('logname', type=str, nargs='?', help='name of logfile', default='--t')
-parser.add_argument('seed', type=int, nargs='?', help='random seed. 0 if true random', default=0)
 
 args = parser.parse_args()
 log_name = args.logname
 if log_name == '--t':
     log_name = str(time.time())
-
-seed_gen.make_seed_distributor(seed=args.seed)
-print('Using Seed: ' + str(seed_gen.seed_distributor.random_seed))
 
 data_feed = Data()
 summary_builder.make_summary_sheet(log_name=log_name)
@@ -96,9 +91,6 @@ with tf.Session() as sess:
 
             run_validation, run_test, end_of_epochs = data_feed.step_train()
             print('Ran Batch: ' + str(data_feed.global_step))
-            print('Max: ' + str(np.amax(output_results)))
-            print('Min: ' + str(np.amin(output_results)))
-
             print('------------------------------------------------------------------')
 
             if run_validation:
