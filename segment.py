@@ -95,6 +95,8 @@ while not end_of_epochs:
 
         print('Ran Validation: {} with {} mean acc'.format(data_feed.validation_step, val_iou_val))
 
+        keras_model.save_weights('weight_{}.hd5'.format(data_feed.validation_step))
+
     if run_test:
         test_iou_val = run_batched_testing(data_type=3, prefix='test'+str(int(data_feed.test_step)))
         # summary_builder.summary_sheet.test.add_summary(test_iou_summary, data_feed.test_step)
