@@ -12,16 +12,9 @@ class SummaryBuilder:
 
         self.log_folder = self.__make_log_folder__(log_name)
 
-        self.training = None
-        self.validation = None
-        self.test = None
-
-        self.training_summaries = None
-
-        if not tf.executing_eagerly():
-            self.training = tf.summary.FileWriter(logdir='logs/' + log_name + '_train/')
-            self.validation = tf.summary.FileWriter(logdir='logs/' + log_name + '_val/')
-            self.test = tf.summary.FileWriter(logdir='logs/' + log_name + '_test/')
+        self.training = tf.summary.create_file_writer('logs/' + log_name + '_train/')
+        self.validation = tf.summary.create_file_writer('logs/' + log_name + '_val/')
+        self.test = tf.summary.create_file_writer('logs/' + log_name + '_test/')
 
     def __make_log_folder__(self, log_name):
         output_folder = 'output/'
@@ -36,37 +29,35 @@ class SummaryBuilder:
 
         return log_folder
 
-    def build_summary(self, loss, labels, predictions):
-        if tf.executing_eagerly():
-            self.__get_iou__(predictions, labels)
-            return None, None, None
-        else:
-            loss_summary = tf.summary.scalar('Loss', loss)
-            iou_calc = self.__get_iou__(prediction=predictions, truth=labels)
-            iou_summary = tf.summary.scalar('IOU', iou_calc)
-
+    def build_histogram(self, keras_model):
+        """
+        with self.training.as_default():
             # Add weights to histogram
-            trainables = tf.trainable_variables()
+            trainables = keras_model.trainable_weights
 
             for weight in trainables:
-                self.add_to_training_summary(new_summary=tf.summary.histogram(name=weight.name, values=weight))
+                tf.summary.histogram(name=weight.name, data=weight)
+        """
 
-        return loss_summary, iou_summary, iou_calc
-
-    def __get_iou__(self, prediction, truth):
+    def get_iou(self, prediction, truth):
         truth, prediction = model.mask_out_void(truth, prediction)
         truth = tf.greater(truth, 0, name='RoadTruths')
         prediction = tf.greater(prediction, 0.0, name='RoadPredictions')
 
-        wrong_prediction = tf.cast(tf.logical_xor(prediction, truth, name='WrongPrediction'), dtype=tf.float64)
-        correct_prediction = tf.cast(tf.logical_and(prediction, truth, name='CorrectPredictions'), dtype=tf.float64)
+        wrong_prediction = tf.cast(tf.math.logical_xor(prediction, truth, name='WrongPrediction'), dtype=tf.float64)
+        correct_prediction = tf.cast(tf.math.logical_and(prediction, truth, name='CorrectPredictions'), dtype=tf.float64)
 
         true_positive = tf.reduce_sum(correct_prediction)
         false_positive_plus_negative = tf.reduce_sum(wrong_prediction)
 
-        iou = tf.div(true_positive, tf.add(true_positive, false_positive_plus_negative), name='IOU')
+        iou = tf.math.divide(true_positive, tf.add(true_positive, false_positive_plus_negative), name='IOU')
 
         return iou
+
+    def commit_sheet(self, results, step):
+        tf.summary.scalar('loss', results[0], step=step)
+        tf.summary.scalar('accuracy', results[1], step=step)
+        tf.summary.scalar('iou', results[2], step=step)
 
     def __make_image__(self, in_image):
         newimage = np.zeros(shape=(in_image.shape[0], in_image.shape[1], 3),
@@ -121,20 +112,6 @@ class SummaryBuilder:
 
         plt.savefig(self.log_folder + prefix + sample_name + '.png', bbox_inches='tight', dpi='figure')
         plt.close()
-
-    def add_to_training_summary(self, new_summary):
-        if self.training_summaries is None:
-            self.training_summaries = new_summary
-        else:
-            self.training_summaries = tf.summary.merge([self.training_summaries, new_summary])
-
-
-summary_sheet = None
-
-
-def make_summary_sheet(log_name):
-    global summary_sheet
-    summary_sheet = SummaryBuilder(log_name=log_name)
 
 ###################
 # TEST ONLY
